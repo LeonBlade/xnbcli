@@ -12,6 +12,7 @@
   "author": "James Stine",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^1.1.3",
     "commander": "^2.9.0"
   }
 }
