@@ -27,7 +27,7 @@ class Log {
      * Displays an info message
      * @param {String} message Message to display to the console as info.
      */
-    static info(message) {
+    static info(message = '') {
         console.log(chalk.bold.blue('[INFO] ') + message);
     }
 
@@ -35,7 +35,7 @@ class Log {
      * Displays a debug message
      * @param {String} message Message to display to the console if debug is enabled.
      */
-    static debug(message) {
+    static debug(message = '') {
         if (this._debug)
             console.log(chalk.bold.green('[DEBUG] ') + message);
     }
@@ -44,7 +44,7 @@ class Log {
      * Displays a warning message
      * @param {String} message Message to display to the console as a warning.
      */
-    static warn(message) {
+    static warn(message = '') {
         console.log(chalk.bold.yellow('[WARN] ') + message);
     }
 
@@ -52,7 +52,7 @@ class Log {
      * Displays an error message
      * @param {String} message Message to display to the console as an error.
      */
-    static error(message) {
+    static error(message = '') {
         console.log(chalk.bold.red('[ERROR] ') + message);
     }
 }
