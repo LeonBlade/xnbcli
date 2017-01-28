@@ -1,6 +1,7 @@
-const Reader = require('./Reader');
+const BufferReader = require('./BufferReader');
 const Log = require('./Log');
-const XnbReader = require('./XnbReader');
+const { TypeReader, StringReader, simplifyType, getReader } = require('./TypeReader');
+const ContentReader = require('./ContentReader');
 const XnbError = require('./XnbError');
 
 // "constants" for this class
@@ -19,13 +20,21 @@ class Xnb {
     constructor() {
         // Compressed flag
         this.compressed = false;
-        // the XNB Reader buffer
+        // the XNB buffer reader
         this.buffer = null;
         // the file size
         this.fileSize = 0;
-        // the readers
+
+        /**
+         * Array of TypeReaders that are used by the XNB file.
+         * @type {TypeReader[]}
+         */
         this.readers = [];
-        // the shared resources`
+
+        /**
+         * Array of shared resources
+         * @type {Array}
+         */
         this.sharedResources = [];
     }
 
@@ -35,7 +44,7 @@ class Xnb {
      */
     load(filename) {
         // create a new instance of reader
-        this.buffer = new Reader(filename);
+        this.buffer = new BufferReader(filename);
 
         // validate the XNB file header
         this._validateHeader();
@@ -54,11 +63,15 @@ class Xnb {
         let readers = this.buffer.read7BitNumber();
         // log how many readers there are
         Log.debug(`Readers: ${readers}`);
+        Log.debug();
+
+        // create an instance of string reader
+        let stringReader = new StringReader();
 
         // loop over the number of readers we have
         for (let i = 0; i < readers; i++) {
             // read the type
-            let type = this.buffer.readString();
+            let type = stringReader.read(this.buffer);
             // read the version
             let version = this.buffer.read(4).readInt32LE();
 
@@ -66,17 +79,14 @@ class Xnb {
             Log.debug(`Type: "${type}"`);
             Log.debug(`Version: ${version}`);
 
-            // resolve simple type for this reader
-            let simpleType = XnbReader.resolveType(type);
             // get the reader for this type
-            let reader = XnbReader.getReader(simpleType);
+            let simpleType = simplifyType(type);
+            let reader = getReader(simpleType);
 
-            // add this reader into the array
-            this.readers.push({
-                type,
-                version,
-                reader
-            });
+            Log.debug(simpleType);
+            Log.debug();
+
+            this.readers.push(reader);
         }
 
         // get the 7-bit value for shared resources
@@ -87,6 +97,19 @@ class Xnb {
         // don't accept shared resources for now(?)
         if (shared != 0)
             throw new XnbError(`Unexpected (${shared}) shared resources.`);
+
+        // TODO: maybe loop over shared resources
+
+        // create content reader from the readers loaded
+        let content = new ContentReader(this.readers);
+        // read the content
+        let result = content.read(this.buffer);
+
+        Log.debug();
+        Log.debug('Result:');
+        Log.debug(JSON.stringify(result));
+
+        return result;
     }
 
     /**
@@ -99,6 +122,8 @@ class Xnb {
 
     /**
      * Ensures the XNB file header is valid.
+     * @private
+     * @method _validateHeader
      */
     _validateHeader() {
         // ensure buffer isn't null

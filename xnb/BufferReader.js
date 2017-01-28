@@ -2,7 +2,7 @@ const fs = require('fs');
 const Log = require('./Log');
 const XnbError = require('./XnbError');
 
-class Reader {
+class BufferReader {
 
     /**
      * Creates instance of Reader class.
@@ -13,18 +13,31 @@ class Reader {
         // ensure the file exists
         if (!fs.existsSync(filename))
             throw new XnbError(`"${filename}" does not exist!`);
-
-        // assign buffer to the read file buffer
+        /**
+         * internal buffer for the reader
+         * @private
+         * @type {Buffer}
+         */
         this._buffer = fs.readFileSync(filename);
-        // set the seek index to zero
+
+        /**
+         * Seek index for the internal buffer.
+         * @private
+         * @type {Number}
+         */
         this._index = 0;
 
-        // create a buffer stack for previous reads
+        /**
+         * Internal buffer stack to hold onto things that are read
+         * @access private
+         * @type {mixed[]}
+         */
         this._bufferStack = [];
     }
 
     /**
      * Get the last read buffer.
+     * @public
      * @method lastRead
      * @return {mixed} Reurns the last read buffer.
      */
@@ -34,6 +47,8 @@ class Reader {
 
     /**
     * Seeks to a specific index in the buffer.
+    * @public
+    * @property seek
     * @param {Number} index Sets the buffer seek index.
     */
     set seek(index) {
@@ -42,6 +57,8 @@ class Reader {
 
     /**
      * Gets the seek index of the buffer.
+     * @public
+     * @property seek
      * @return {Number} Reurns the buffer seek index.
      */
     get seek() {
@@ -50,6 +67,8 @@ class Reader {
 
     /**
      * Get the buffer size
+     * @public
+     * @property size
      * @return {Number} Returns the size of the buffer.
      */
     get size() {
@@ -58,9 +77,11 @@ class Reader {
 
     /**
      * Reads a specific number of bytes.
+     * @public
+     * @method read
      * @param {Number} count Number of bytes to read.
      * @param {Boolean} [seek] If you want the seeker index to advance on read.
-     * @returns {mixed} Contents of the buffer.
+     * @returns {Buffer} Contents of the buffer.
      */
     read(count, seek = true) {
         // read from the buffer
@@ -77,6 +98,7 @@ class Reader {
 
     /**
      * Reads a 7-bit number.
+     * @method read7BitNumber
      * @returns {Number} Returns the number read.
      */
     read7BitNumber() {
@@ -100,6 +122,7 @@ class Reader {
 
     /**
      * Read in a string.
+     * @method readString
      * @returns {String} String read from buffer.
      */
     readString() {
@@ -110,5 +133,5 @@ class Reader {
     }
 }
 
-// export the Reader class
-module.exports = Reader;
+// export the BufferReader class
+module.exports = BufferReader;
