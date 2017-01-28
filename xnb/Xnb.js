@@ -1,7 +1,7 @@
 const BufferReader = require('./BufferReader');
 const Log = require('./Log');
 const { TypeReader, StringReader, simplifyType, getReader } = require('./TypeReader');
-const ContentReader = require('./ContentReader');
+const ReaderResolver = require('./ReaderResolver');
 const XnbError = require('./XnbError');
 
 // "constants" for this class
@@ -18,6 +18,12 @@ class Xnb {
      * @constructor
      */
     constructor() {
+        // target platform
+        this.target = '';
+        // format version
+        this.formatVersion = 0;
+        // HiDef flag
+        this.hidef = false;
         // Compressed flag
         this.compressed = false;
         // the XNB buffer reader
@@ -43,6 +49,8 @@ class Xnb {
      * @param {String} filename The XNB file you want to load.
      */
     load(filename) {
+        Log.info(`Reading file "${filename}" ...`);
+
         // create a new instance of reader
         this.buffer = new BufferReader(filename);
 
@@ -60,33 +68,31 @@ class Xnb {
         // NOTE: assuming the buffer is now decompressed
 
         // get the 7-bit value for readers
-        let readers = this.buffer.read7BitNumber();
+        let count = this.buffer.read7BitNumber();
         // log how many readers there are
-        Log.debug(`Readers: ${readers}`);
-        Log.debug();
+        Log.debug(`Readers: ${count}`);
 
         // create an instance of string reader
         let stringReader = new StringReader();
 
+        // a local copy of readers for the export
+        let readers = [];
+
         // loop over the number of readers we have
-        for (let i = 0; i < readers; i++) {
+        for (let i = 0; i < count; i++) {
             // read the type
             let type = stringReader.read(this.buffer);
             // read the version
             let version = this.buffer.read(4).readInt32LE();
-
-            // print out debug info
-            Log.debug(`Type: "${type}"`);
-            Log.debug(`Version: ${version}`);
 
             // get the reader for this type
             let simpleType = simplifyType(type);
             let reader = getReader(simpleType);
 
             Log.debug(simpleType);
-            Log.debug();
 
             this.readers.push(reader);
+            readers.push({ type, version });
         }
 
         // get the 7-bit value for shared resources
@@ -98,18 +104,25 @@ class Xnb {
         if (shared != 0)
             throw new XnbError(`Unexpected (${shared}) shared resources.`);
 
-        // TODO: maybe loop over shared resources
-
         // create content reader from the readers loaded
-        let content = new ContentReader(this.readers);
+        let content = new ReaderResolver(this.readers);
         // read the content
         let result = content.read(this.buffer);
 
-        Log.debug();
-        Log.debug('Result:');
-        Log.debug(JSON.stringify(result));
+        Log.info('Successfuly read XNB file!');
 
-        return result;
+        // return the loaded XNB object
+        return {
+            header: {
+                target: this.target,
+                formatVersion: this.formatVersion,
+                hidef: this.hidef,
+                compressed: this.compressed
+            },
+            readers,
+            sharedResources: this.sharedResources,
+            content: result
+        };
     }
 
     /**
@@ -137,8 +150,11 @@ class Xnb {
         // debug print that valid XNB magic was found
         Log.debug('Valid XNB magic found!');
 
+        // load the target platform
+        this.target = this.buffer.read(1).toString().toLowerCase();
+
         // read the target platform
-        switch (this.buffer.read(1).toString().toLowerCase()) {
+        switch (this.target) {
             case 'w':
                 Log.debug('Target platform: Microsoft Windows');
                 break;
@@ -149,12 +165,15 @@ class Xnb {
                 Log.debug('Target platform: Xbox 360');
                 break;
             default:
-                Log.warn(`Invalid target platform "${this.buffer.lastRead}" found.`);
+                Log.warn(`Invalid target platform "${this.target}" found.`);
                 break;
         }
 
+        // read the format version
+        this.formatVersion = this.buffer.read(1).readInt8();
+
         // read the XNB format version
-        switch (this.buffer.read(1).readInt8()) {
+        switch (this.formatVersion) {
             case 0x3:
                 Log.debug('XNB Format Version: XNA Game Studio 3.0');
                 break;
@@ -165,19 +184,19 @@ class Xnb {
                 Log.debug('XNB Format Version: XNA Game Studio 4.0');
                 break;
             default:
-                Log.warn(`XNB Format Version is unknown, found 0x${this.buffer.lastRead.toString('hex')}`);
+                Log.warn(`XNB Format Version is unknown, found 0x${this.formatVersion.toString('hex')}`);
                 break;
         }
 
         // read the flag bits
         let flags = this.buffer.read(1).readInt8();
         // get the HiDef flag
-        let hiDef = (flags & HIDEF_MASK) != 0;
+        this.hidef = (flags & HIDEF_MASK) != 0;
         // get the compressed flag
         this.compressed = (flags & COMPRESSED_MASK) != 0;
 
         // debug content information
-        Log.debug(`Content: ${(hiDef?'HiDef':'Reach')}`);
+        Log.debug(`Content: ${(this.hidef?'HiDef':'Reach')}`);
         // log comprssed state
         Log.debug(`Compressed: ${this.compressed}`);
 

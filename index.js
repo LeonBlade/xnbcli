@@ -1,7 +1,8 @@
 const fs = require('fs');
+const path = require('path');
 const program = require('commander');
-const Log = require('./xnb/log');
-const Xnb = require('./xnb/xnb');
+const Log = require('./xnb/Log');
+const Xnb = require('./xnb/Xnb');
 
 // turn on debug printing
 Log.DEBUG = true;
@@ -11,7 +12,7 @@ let inputValue;
 let outputValue;
 
 // create the program and set version number
-program.version('0.0.1');
+program.version('0.1.0');
 
 // XNB unpack command
 program
@@ -19,11 +20,19 @@ program
     .description('Used to unpack XNB files.')
     .action((input, output) => {
         // create new instance of XNB
-        let xnb = new Xnb();
+        const xnb = new Xnb();
         // load the XNB and get the object from it
-        let result = xnb.load(input);
-        // save the result into a file
-        fs.writeFileSync('/Users/LeonBlade/Desktop/test.json', JSON.stringify(result, null, 4));
+        const result = xnb.load(input);
+
+        // filepath for output
+        const filepath = path.join(output, path.dirname(input));
+        // filename for output
+        const filename = path.join(filepath, path.basename(input, '.xnb') + '.json');
+
+        if (!fs.existsSync(filepath))
+            fs.mkdirSync(filepath);
+
+        fs.writeFileSync(filename, JSON.stringify(result, null, 4));
     });
 
 // XNB pack Command
@@ -44,7 +53,7 @@ program.parse(process.argv);
 if (!process.argv.slice(2).length) {
     //program.help();
     let xnb = new Xnb();
-    xnb.load('test/Farm.xnb');
+    xnb.load('test/Greenhouse.xnb');
 }
 
 // TODO: process input/output into the XNB tool
