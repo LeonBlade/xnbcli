@@ -1,13 +1,14 @@
 const BufferReader = require('./BufferReader');
 const TypeReader = require('./TypeReader');
+const Log = require('./Log');
 
 /**
- * Class for content reader used to read the XNB file contents
+ * Class used to read the XNB types using the readers
  * @class
  */
-class ContentReader {
+class ReaderResolver {
     /**
-     * Creating a new instance of ContentReader
+     * Creating a new instance of ReaderResolver
      * @constructor
      * @param {TypeReader[]} readers Array of TypeReaders
      */
@@ -33,4 +34,4 @@ class ContentReader {
     }
 }
 
-module.exports = ContentReader;
+module.exports = ReaderResolver;
