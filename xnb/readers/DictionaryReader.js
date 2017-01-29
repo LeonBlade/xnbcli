@@ -44,9 +44,6 @@ class DictionaryReader extends BaseReader {
         const uint32Reader = new UInt32Reader();
         let size = uint32Reader.read(buffer);
 
-        Log.debug(`Dictionary has ${size} entries.`);
-        Log.debug(buffer.seek);
-
         // loop over the size of the dictionary and read in the data
         for (let i = 0; i < size; i++) {
             // get the key

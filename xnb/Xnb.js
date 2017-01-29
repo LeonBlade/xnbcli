@@ -90,9 +90,9 @@ class Xnb {
             let simpleType = simplifyType(type);
             let reader = getReader(simpleType);
 
-            Log.debug(simpleType);
-
+            // add reader to the list
             this.readers.push(reader);
+            // add local reader
             readers.push({ type, version });
         }
 
@@ -110,6 +110,7 @@ class Xnb {
         // read the content
         let result = content.read(this.buffer);
 
+        // we loaded the XNB file successfully
         Log.info('Successfuly read XNB file!');
 
         // return the loaded XNB object

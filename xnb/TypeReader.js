@@ -14,11 +14,8 @@ const simplifyType = type => {
     // gets the first part of the type
     let simple = type.split(/`|,/)[0];
 
-    Log.debug(simple);
-
     // check if its an array or not
     let isArray = simple.endsWith('[]');
-    Log.debug(isArray);
     // if its an array then get the array type
     if (isArray)
         return `Array<${simplifyType(simple.slice(0, -2))}>`;
@@ -170,31 +167,12 @@ const getReader = type => {
     // loop over subtypes and resolve readers for them
     info.subtypes = info.subtypes.map(getReader);
 
-    // switch over possible implemented types to return reader instance for
-    switch(info.type) {
+    // if we have a reader then use one
+    if (Readers.hasOwnProperty(`${info.type}Reader`))
+        return new (Readers[`${info.type}Reader`])(info.subtypes[0], info.subtypes[1]);
 
-        case 'Nullable':
-            return new Readers.NullableReader(info.subtypes[0]);
-
-        case 'Array':
-            return new Readers.ArrayReader(info.subtypes[0]);
-
-        case 'List':
-            return new Readers.ListReader(info.subtypes[0]);
-
-        case 'Nullable':
-            return new Readers.NullableReader(info.subtypes[0]);
-
-        case 'Dictionary':
-            return new Readers.DictionaryReader(info.subtypes[0], info.subtypes[1]);
-
-        default:
-            // if we have a generic reader class then just instantiate one from the list
-            if (Readers.hasOwnProperty(`${info.type}Reader`))
-                return new (Readers[`${info.type}Reader`])();
-
-            throw new XnbError(`Invalid reader type "${type}" passed, unable to resolve!`);
-    }
+    // throw an error as type is not supported
+    throw new XnbError(`Invalid reader type "${type}" passed, unable to resolve!`);
 }
 
 exports.getReader = getReader;
