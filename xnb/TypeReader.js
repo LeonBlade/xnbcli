@@ -21,7 +21,7 @@ const simplifyType = type => {
         return `Array<${simplifyType(simple.slice(0, -2))}>`;
 
     // switch over the possible types regisered with this tool
-    switch(simple) {
+    switch (simple) {
 
         // Boolean
         case 'Microsoft.Xna.Framework.Content.BooleanReader':
@@ -117,7 +117,6 @@ const parseSubtypes = type => {
 
     // get the contents of the wrapped array
     subtype = subtype.slice(2, -1);
-    Log.debug(`Found ${count} subtypes.`);
 
     // regex pattern to match the subtypes
     let pattern = /\[(([a-zA-Z0-9\.\,\=\`]+)(\[\])?(\, |\])){1,}/g;

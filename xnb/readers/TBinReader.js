@@ -17,7 +17,7 @@ class TBinReader extends BaseReader {
         let data = buffer.read(size);
 
         // return the data
-        return { data };
+        return { export: { type: this.type, data } };
     }
 
     isValueType() {

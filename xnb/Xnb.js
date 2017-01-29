@@ -186,7 +186,7 @@ class Xnb {
                 Log.debug('XNB Format Version: XNA Game Studio 4.0');
                 break;
             default:
-                Log.warn(`XNB Format Version is unknown, found 0x${this.formatVersion.toString('hex')}`);
+                Log.warn(`XNB Format Version 0x${this.formatVersion.toString('hex')} unknown.`);
                 break;
         }
 

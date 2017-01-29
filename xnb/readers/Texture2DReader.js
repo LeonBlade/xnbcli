@@ -38,14 +38,14 @@ class Texture2DReader extends BaseReader {
             data = dxt.decompress(data, width, height, dxt.kDxt3);
         else if (format == 6)
             data = dxt.decompress(data, width, height, dxt.kDxt5);
-        else if (format == 0)
+        else if (format != 0)
             throw new XnbError(`Non-implemented Texture2D format type (${format}) found.`);
 
         return {
             format,
             width,
             height,
-            data
+            export: { type: this.type, data }
         };
     }
 

@@ -1,8 +1,9 @@
-const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const Log = require('./xnb/Log');
 const Xnb = require('./xnb/Xnb');
+const exportFile = require('./xnb/Exporter');
+const XnbError = require('./xnb/XnbError');
 
 // turn on debug printing
 Log.DEBUG = true;
@@ -24,15 +25,23 @@ program
         // load the XNB and get the object from it
         const result = xnb.load(input);
 
-        // filepath for output
-        const filepath = path.join(output, path.dirname(input));
-        // filename for output
-        const filename = path.join(filepath, path.basename(input, '.xnb') + '.json');
+        // if output is undefined then set path to input path
+        if (output == undefined)
+            output = path.dirname(input);
 
-        if (!fs.existsSync(filepath))
-            fs.mkdirSync(filepath);
+        // get the basename from the input
+        const basename = path.basename(input, '.xnb');
+        // get the dirname from the input
+        const dirname = path.dirname(input);
 
-        fs.writeFileSync(filename, JSON.stringify(result, null, 4));
+        // get the output file path
+        const outputFile = path.resolve(output, dirname, basename + '.json');
+
+        // save the file
+        if (exportFile(outputFile, result))
+            Log.info(`Output file saved: ${outputFile}`);
+        else
+            Log.error(`File ${outputFile} failed to save!`);
     });
 
 // XNB pack Command

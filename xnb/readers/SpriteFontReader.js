@@ -22,14 +22,14 @@ class SpriteFontReader extends BaseReader {
         const singleReader = new SingleReader();
         const nullableCharReader = new NullableReader(new CharReader());
 
-        let texture = resolver.read(buffer)
-        let glyphs = resolver.read(buffer);
-        let cropping = resolver.read(buffer);;
-        let characterMap = resolver.read(buffer);
-        let verticalLineSpacing = int32Reader.read(buffer);
-        let horizontalSpacing = singleReader.read(buffer);
-        let kerning = resolver.read(buffer);
-        let defaultCharacter = nullableCharReader.read(buffer);
+        const texture = resolver.read(buffer)
+        const glyphs = resolver.read(buffer);
+        const cropping = resolver.read(buffer);;
+        const characterMap = resolver.read(buffer);
+        const verticalLineSpacing = int32Reader.read(buffer);
+        const horizontalSpacing = singleReader.read(buffer);
+        const kerning = resolver.read(buffer);
+        const defaultCharacter = nullableCharReader.read(buffer);
 
         return {
             texture,

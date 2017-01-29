@@ -1,5 +1,6 @@
 const BaseReader = require('./BaseReader');
 const BufferReader = require('../BufferReader');
+const BooleanReader = require('./BooleanReader');
 
 /**
  * Nullable Reader
@@ -44,3 +45,5 @@ class NullableReader extends BaseReader {
         return `Nullable<${this.reader.type}>`;
     }
 }
+
+module.exports = NullableReader;
