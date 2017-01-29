@@ -1,6 +1,7 @@
 const BufferReader = require('./BufferReader');
 const Log = require('./Log');
-const { TypeReader, StringReader, simplifyType, getReader } = require('./TypeReader');
+const { simplifyType, getReader } = require('./TypeReader');
+const { StringReader } = require('./readers');
 const ReaderResolver = require('./ReaderResolver');
 const XnbError = require('./XnbError');
 
