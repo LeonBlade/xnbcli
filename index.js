@@ -35,7 +35,9 @@ program
         const dirname = path.dirname(input);
 
         // get the output file path
-        const outputFile = path.resolve(output, dirname, basename + '.json');
+        const outputFile = path.resolve(output, basename + '.json');
+
+        Log.debug(outputFile);
 
         // save the file
         if (exportFile(outputFile, result))
@@ -59,10 +61,7 @@ program.action(() => program.help());
 program.parse(process.argv);
 
 // show help if we didn't specify any valid input
-if (!process.argv.slice(2).length) {
-    //program.help();
-    let xnb = new Xnb();
-    xnb.load('test/Greenhouse.xnb');
-}
+if (!process.argv.slice(2).length)
+    program.help();
 
 // TODO: process input/output into the XNB tool

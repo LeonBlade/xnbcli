@@ -59,6 +59,11 @@ const exportFile = (filename, xnbObject) => {
                 extension = 'png';
                 break;
 
+            // Compiled Effects
+            case 'Effect':
+                extension = 'cso';
+                break;
+
             // TODO: TBin to tbin or tmx
             case 'TBin':
                 extension = 'tbin';

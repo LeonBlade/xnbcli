@@ -14,7 +14,7 @@ class EffectReader extends BaseReader {
         let size = uint32Reader.read(buffer);
         let bytecode = buffer.read(size);
 
-        return bytecode.toString('hex');
+        return { export: { type: this.type, data: bytecode } };
     }
 
     isValueType() {
