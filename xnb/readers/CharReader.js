@@ -13,7 +13,7 @@ class CharReader extends BaseReader {
      * @returns {String}
      */
     read(buffer) {
-        let charSize = this._getCharSize(buffer.read(1, false).readInt8());
+        let charSize = this._getCharSize(buffer.peek(1).readInt8());
         return buffer.read(charSize).toString('utf8');
     }
 
