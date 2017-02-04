@@ -55,6 +55,26 @@ class Log {
     static error(message = '') {
         console.log(chalk.bold.red('[ERROR] ') + message);
     }
+
+    /**
+     * Displays a binary message
+     * @param {Number} n
+     * @param {Number} size
+     * @param {Number} sliceBegin
+     * @param {Number} sliceEnd
+     */
+    static b(n, size = 8, sliceBegin = -1, sliceEnd = -1) {
+        var z = ''
+        while (z.length < size)
+            z += '0';
+        z = z.slice(n.toString(2).length) + n.toString(2);
+        if (sliceBegin == -1 && sliceEnd == -1)
+            return `0b${z}`;
+        return  chalk.gray('0b') +
+                chalk.gray(z.slice(0, sliceBegin)) +
+                chalk.bold.blue('[') + chalk.bold(z.slice(sliceBegin, sliceEnd)) + chalk.bold.blue(']') +
+                chalk.gray(z.slice(sliceEnd));
+    }
 }
 
 // export the log
