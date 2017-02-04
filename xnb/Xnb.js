@@ -4,10 +4,12 @@ const { simplifyType, getReader } = require('./TypeReader');
 const { StringReader } = require('./readers');
 const ReaderResolver = require('./ReaderResolver');
 const XnbError = require('./XnbError');
+const Decompress = require('./Decompress');
 
 // "constants" for this class
 const HIDEF_MASK = 0x1;
 const COMPRESSED_MASK = 0x80;
+const XNB_COMPRESSED_PROLOGUE_SIZE = 14;
 
 /**
  * XNB file class used to read and write XNB files
@@ -61,9 +63,28 @@ class Xnb {
         // we validated the file successfully
         Log.info('XNB file validated successfully!');
 
+        // read the file size
+        this.fileSize = this.buffer.read(4).readUInt32LE();
+
+        // verify the size
+        if (this.buffer.size != this.fileSize)
+            throw new XnbError('XNB file has been truncated!');
+
+        // print out the file size
+        Log.debug(`File size: ${this.fileSize} bytes.`);
+
         // if the file is compressed then we need to decompress it
         if (this.compressed) {
             // TODO: decompress the file
+            let decompressedSize = this.buffer.read(4).readUInt32LE();
+            Log.debug(`Uncompressed size: ${decompressedSize} bytes.`);
+
+            let compressedTodo = this.fileSize - XNB_COMPRESSED_PROLOGUE_SIZE;
+
+            let dec = new Decompress(this.buffer);
+            dec.decompress(this.fileSize);
+
+            process.exit(1);
         }
 
         // NOTE: assuming the buffer is now decompressed
@@ -145,9 +166,11 @@ class Xnb {
         if (this.buffer == null)
             throw new XnbError('Buffer is null');
 
+        // get the magic from the beginning of the file
+        const magic = this.buffer.read(3).toString();
         // check to see if the magic is correct
-        if (this.buffer.read(3).toString() != 'XNB')
-            throw new XnbError(`Invalid file magic found, expecting "XNB", found "${this.buffer.lastRead}"`);
+        if (magic != 'XNB')
+            throw new XnbError(`Invalid file magic found, expecting "XNB", found "${magic}"`);
 
         // debug print that valid XNB magic was found
         Log.debug('Valid XNB magic found!');
@@ -201,19 +224,6 @@ class Xnb {
         Log.debug(`Content: ${(this.hidef?'HiDef':'Reach')}`);
         // log comprssed state
         Log.debug(`Compressed: ${this.compressed}`);
-
-        // read the file size
-        let size = this.buffer.read(4).readUInt32LE();
-        // verify the size
-        if (this.buffer.size != size)
-            throw new XnbError('XNB file has been truncated!');
-
-        // print out the file size
-        Log.debug(`File size: ${size} bytes.`);
-
-        // if the file is compressed
-        if (this.compressed)
-            Log.debug(`Uncompressed size: ${this.buffer.read(4).readUInt32LE()} bytes.`);
     }
 
 }
