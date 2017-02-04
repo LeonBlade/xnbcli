@@ -68,7 +68,11 @@ class Decompress {
 
         // TODO: decommpress the frame/block
         // TODO: write output of decompression to a buffer to return
-        lzx.decompress(this.buffer, frame_size, block_size);
+        let win = lzx.decompress(this.buffer, frame_size, block_size);
+
+        let outBuf = Buffer.from(win);
+
+        fs.writeFileSync('/Users/LeonBlade/Desktop/output.bin', outBuf);
 
         process.exit(1);
     }
