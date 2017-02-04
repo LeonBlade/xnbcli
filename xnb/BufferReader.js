@@ -74,7 +74,7 @@ class BufferReader {
         // set the offset and clamp to 16-bit frame
         this._bitOffset = offset % 16;
         // get byte seek for bit ranges that wrap past 16-bit frames
-        const byteSeek = ((offset - (offset % 16)) / 16) * 2;
+        const byteSeek = ((offset - (Math.abs(offset) % 16)) / 16) * 2;
         // seek ahead for overflow on 16-bit frames
         this.seek(byteSeek);
     }
@@ -165,6 +165,9 @@ class BufferReader {
         let bitsLeft = bits;
         let read = 0;
 
+        Log.debug();
+        Log.debug(`> Reading ${bits} bits ...`);
+
         // read bits in 16-bit chunks
         while (bitsLeft > 0) {
             // peek in a 16-bit value
@@ -175,20 +178,40 @@ class BufferReader {
             // set the offset based on current position in and bit count
             const offset = 16 - this.bitPosition - bitsInFrame;
 
-            // create mask and shift the mask up to the offset << and then shift the return back down into mask space >>
+            // create mask and shift the mask up to the offset <<
+            // and then shift the return back down into mask space >>
             const value = (peek & (2 ** bitsInFrame - 1 << offset)) >> offset;
 
-            // assign read with the value shifted over for reading in loops
-            read |= value << bits - bitsInFrame;
-            Log.debug(`${value} << ${bits} - ${bitsInFrame}`);
+            Log.debug(Log.b(peek, 16, this.bitPosition, this.bitPosition + bitsInFrame));
 
             // remove the bits we read from what we have left
             bitsLeft -= bitsInFrame;
             // add the bits read to the bit position
             this.bitPosition += bitsInFrame;
+
+            // assign read with the value shifted over for reading in loops
+            read |= value << bitsLeft;
         }
 
+        Log.debug();
+
         // return the read bits
+        return read;
+    }
+
+    /**
+     * Used to peek bits.
+     * @public
+     * @method peekLZXBits
+     * @param {Number} bits
+     * @returns {Number}
+     */
+    peekLZXBits(bits) {
+        // read the bits like normal
+        const read = this.readLZXBits(bits);
+        // just rewind the bit position, this will also rewind bytes where needed
+        this.bitPosition -= bits;
+        // return the peeked value
         return read;
     }
 
