@@ -4,7 +4,7 @@ const { simplifyType, getReader } = require('./TypeReader');
 const { StringReader } = require('./readers');
 const ReaderResolver = require('./ReaderResolver');
 const XnbError = require('./XnbError');
-const Decompress = require('./Decompress');
+const Presser = require('./Presser');
 
 // "constants" for this class
 const HIDEF_MASK = 0x1;
@@ -75,17 +75,24 @@ class Xnb {
 
         // if the file is compressed then we need to decompress it
         if (this.compressed) {
-            // TODO: decompress the file
-            let decompressedSize = this.buffer.read(4).readUInt32LE();
+            // get the decompressed size
+            const decompressedSize = this.buffer.read(4).readUInt32LE();
             Log.debug(`Uncompressed size: ${decompressedSize} bytes.`);
 
-            let compressedTodo = this.fileSize - XNB_COMPRESSED_PROLOGUE_SIZE;
+            // get the amount of data to compress
+            const compressedTodo = this.fileSize - XNB_COMPRESSED_PROLOGUE_SIZE;
 
-            let dec = new Decompress(this.buffer);
-            dec.decompress(this.fileSize);
+            // decompress the buffer based on the file size
+            const decompressed = Presser.decompress(this.buffer);
 
-            process.exit(1);
+            // copy the decompressed buffer into the file buffer
+            this.buffer.copyFrom(decompressed, XNB_COMPRESSED_PROLOGUE_SIZE, 0, decompressedSize);
+
+            // reset the byte seek head to read content
+            this.buffer.bytePosition = XNB_COMPRESSED_PROLOGUE_SIZE;
         }
+
+        Log.debug(`Reading from byte position: ${this.buffer.bytePosition}`);
 
         // NOTE: assuming the buffer is now decompressed
 
@@ -95,10 +102,10 @@ class Xnb {
         Log.debug(`Readers: ${count}`);
 
         // create an instance of string reader
-        let stringReader = new StringReader();
+        const stringReader = new StringReader();
 
         // a local copy of readers for the export
-        let readers = [];
+        const readers = [];
 
         // loop over the number of readers we have
         for (let i = 0; i < count; i++) {
@@ -118,7 +125,7 @@ class Xnb {
         }
 
         // get the 7-bit value for shared resources
-        let shared = this.buffer.read7BitNumber();
+        const shared = this.buffer.read7BitNumber();
         // log the shared resources count
         Log.debug(`Shared Resources: ${shared}`);
 
@@ -127,9 +134,9 @@ class Xnb {
             throw new XnbError(`Unexpected (${shared}) shared resources.`);
 
         // create content reader from the readers loaded
-        let content = new ReaderResolver(this.readers);
+        const content = new ReaderResolver(this.readers);
         // read the content
-        let result = content.read(this.buffer);
+        const result = content.read(this.buffer);
 
         // we loaded the XNB file successfully
         Log.info('Successfuly read XNB file!');
@@ -143,7 +150,6 @@ class Xnb {
                 compressed: this.compressed
             },
             readers,
-            sharedResources: this.sharedResources,
             content: result
         };
     }
@@ -214,7 +220,7 @@ class Xnb {
         }
 
         // read the flag bits
-        let flags = this.buffer.read(1).readInt8();
+        const flags = this.buffer.read(1).readInt8();
         // get the HiDef flag
         this.hidef = (flags & HIDEF_MASK) != 0;
         // get the compressed flag

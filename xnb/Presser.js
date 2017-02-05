@@ -5,33 +5,20 @@ const XnbError = require('./XnbError');
 const Log = require('./Log');
 
 /**
- * Used to decompress LZX.
+ * Used to compress and decompress LZX.
  * @class
+ * @public
  */
-class Decompress {
-
-    /**
-     * Creates the decompress instance.
-     * @constructor
-     * @param {BufferReader} buffer
-     * @returns {BufferReader}
-     */
-    constructor(buffer) {
-        /**
-         * BufferReader for decompression
-         * @type {BufferReader}
-         */
-        this.buffer = buffer;
-    }
+class Presser {
 
     /**
      * Decompress a certain amount of bytes.
      * @param {Number} compressed
-     * @returns {BufferReader}
+     * @returns {Buffer}
      */
-    decompress(compressed) {
+    static decompress(buffer) {
         // flag is for determining if frame_size is fixed or not
-        const flag = this.buffer.read(1).readUInt8();
+        const flag = buffer.read(1).readUInt8();
 
         // allocate variables for block and frame size
         let block_size;
@@ -43,15 +30,15 @@ class Decompress {
         // if flag is set to 0xFF that means we will read in frame size
         if (flag == 0xFF) {
             // read in the block size
-            block_size = this.buffer.readLZXInt16();
+            block_size = buffer.readLZXInt16();
             // read in the frame size
-            frame_size = this.buffer.readLZXInt16();
+            frame_size = buffer.readLZXInt16();
         }
         else {
             // rewind the buffer
             this.buffer.seek(-1);
             // read in the block size
-            block_size = this.buffer.readLZXInt16(this.buffer);
+            block_size = buffer.readLZXInt16(this.buffer);
             // set the frame size
             frame_size = 0x8000;
         }
@@ -67,15 +54,16 @@ class Decompress {
         Log.debug(`Block Size: ${block_size}, Frame Size: ${frame_size}`);
 
         // TODO: decommpress the frame/block
-        // TODO: write output of decompression to a buffer to return
-        let win = lzx.decompress(this.buffer, frame_size, block_size);
 
-        let outBuf = Buffer.from(win);
+        // decompress the file based on frame and block size
+        const decompressed = lzx.decompress(buffer, frame_size, block_size);
 
-        fs.writeFileSync('/Users/LeonBlade/Desktop/output.bin', outBuf);
+        // we have finished decompressing the file
+        Log.info('File has been successfully decompressed!');
 
-        process.exit(1);
+        // return the decompressed buffer
+        return decompressed
     }
 }
 
-module.exports = Decompress;
+module.exports = Presser;
