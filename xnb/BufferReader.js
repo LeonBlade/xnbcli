@@ -13,6 +13,7 @@ class BufferReader {
         // ensure the file exists
         if (!fs.existsSync(filename))
             throw new XnbError(`"${filename}" does not exist!`);
+
         /**
          * internal buffer for the reader
          * @private
@@ -110,6 +111,36 @@ class BufferReader {
     get buffer() {
         return this._buffer;
     }
+
+    /**
+     * Writes another buffer into this buffer.
+     * @public
+     * @method write
+     * @param {Buffer} buffer
+     * @param {Number} targetIndex
+     * @param {Number} sourceIndex
+     * @param {Number} length
+     */
+    copyFrom(buffer, targetIndex = 0, sourceIndex = 0, length = buffer.length) {
+        Log.debug(`CopyFrom: ${targetIndex} -> ${sourceIndex}, ${length}`);
+        // we need to resize the buffer to fit the contents
+        if (this.buffer.length < length + targetIndex) {
+            // create a temporary buffer of the new size
+            const tempBuffer = Buffer.alloc(this.buffer.length + (length + targetIndex - this.buffer.length));
+            // copy our buffer into the temp buffer
+            this.buffer.copy(tempBuffer);
+            // copy the buffer given into the temp buffer
+            buffer.copy(tempBuffer, targetIndex, sourceIndex, length);
+            // assign our buffer to the temporary buffer
+            this._buffer = tempBuffer;
+        }
+        else {
+            // copy the buffer into our buffer
+            buffer.copy(this.buffer, targetIndex, sourceIndex, length);
+        }
+    }
+
+    // [XX|XX]XXXX|
 
     /**
      * Reads a specific number of bytes.
