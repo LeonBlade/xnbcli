@@ -307,7 +307,7 @@ class Lzx {
             start_window_pos = this.window_size;
         start_window_pos -= block_remaining; // TODO: should be out length
 
-        return win;
+        return Buffer.from(win);
     }
 
     /**
