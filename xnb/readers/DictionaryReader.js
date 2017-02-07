@@ -42,7 +42,7 @@ class DictionaryReader extends BaseReader {
 
         // read in the size of the dictionary
         const uint32Reader = new UInt32Reader();
-        let size = uint32Reader.read(buffer);
+        const size = uint32Reader.read(buffer);
 
         // loop over the size of the dictionary and read in the data
         for (let i = 0; i < size; i++) {
