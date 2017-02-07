@@ -97,7 +97,7 @@ const simplifyType = type => {
 
         // unimplemented type catch
         default:
-            throw new XnbError(`Non-implemented type found, cannot resolve type ${simple} @ ${JSON.stringify(process.argv)}`);
+            throw new XnbError(`Non-implemented type found, cannot resolve type "${simple}", ${type}.`);
     }
 }
 
@@ -143,10 +143,7 @@ const getTypeInfo = type => {
     let subtypes = type.match(/<(.+)>/);
 
     // if we do have subtypes then split and trim them
-    if (subtypes)
-        subtypes = subtypes[1].split(',').map(type => type.trim());
-    else
-        subtypes = [];
+    subtypes = subtypes ? subtypes[1].split(',').map(type => type.trim()) : [];
 
     // return info object
     return { type: mainType, subtypes };
