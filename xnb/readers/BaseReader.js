@@ -36,6 +36,14 @@ class BaseReader {
     read(buffer, resolver) {
         throw new XnbError('Cannot invoke methods on abstract class.');
     }
+
+    /**
+     * When printing out in a string.
+     * @returns {String}
+     */
+    toString() {
+        return this.type;
+    }
 }
 
 module.exports = BaseReader;
