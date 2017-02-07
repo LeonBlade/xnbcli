@@ -1,6 +1,7 @@
 const BufferReader = require('./BufferReader');
 const TypeReader = require('./TypeReader');
 const Log = require('./Log');
+const XnbError = require('./XnbError');
 
 /**
  * Class used to read the XNB types using the readers
@@ -29,6 +30,8 @@ class ReaderResolver {
     read(buffer) {
         // read the index of which reader to use
         let index = buffer.read7BitNumber() - 1;
+        if (this.readers[index] == null)
+            throw new XnbError(`Invalid reader index ${index}`);
         // read the buffer using the selected reader
         return this.readers[index].read(buffer, this);
     }
