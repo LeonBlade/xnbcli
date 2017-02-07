@@ -13,12 +13,14 @@ class Presser {
 
     /**
      * Decompress a certain amount of bytes.
-     * @param {Number} compressed
+     * @public
+     * @static
+     * @param {BufferReader} buffer
      * @returns {Buffer}
      */
-    static decompress(buffer) {
-        // flag is for determining if frame_size is fixed or not
-        const flag = buffer.read(1).readUInt8();
+    static decompress(buffer, todo) {
+        // current index into the buffer
+        let pos = 0;
 
         // allocate variables for block and frame size
         let block_size;
@@ -27,42 +29,56 @@ class Presser {
         // create the LZX instance with 16-bit window frame
         const lzx = new Lzx(16);
 
-        // if flag is set to 0xFF that means we will read in frame size
-        if (flag == 0xFF) {
-            // read in the block size
-            block_size = buffer.readLZXInt16();
-            // read in the frame size
-            frame_size = buffer.readLZXInt16();
+        // the full decompressed array
+        let decompressed = [];
+
+        // loop over the bytes left
+        while (pos < todo) {
+            // flag is for determining if frame_size is fixed or not
+            const flag = buffer.read(1).readUInt8();
+
+            // if flag is set to 0xFF that means we will read in frame size
+            if (flag == 0xFF) {
+                // read in the frame size
+                frame_size = buffer.readLZXInt16();
+                // read in the block size
+                block_size = buffer.readLZXInt16();
+                // advance the byte position forward
+                pos += 5;
+            }
+            else {
+                // rewind the buffer
+                buffer.seek(-1);
+                // read in the block size
+                block_size = buffer.readLZXInt16(this.buffer);
+                // set the frame size
+                frame_size = 0x8000;
+                // advance byte position forward
+                pos += 2;
+            }
+
+            // ensure the block and frame size aren't empty
+            if (block_size == 0 || frame_size == 0)
+                break;
+
+            // ensure the block and frame size don't exceed size of integers
+            if (block_size > 0x10000 || frame_size > 0x10000)
+                throw new XnbError('Invalid size read in compression content.');
+
+            Log.debug(`Block Size: ${block_size}, Frame Size: ${frame_size}`);
+
+            // decompress the file based on frame and block size
+            decompressed = decompressed.concat(lzx.decompress(buffer, frame_size, block_size));
+
+            // increase position counter
+            pos += block_size;
         }
-        else {
-            // rewind the buffer
-            this.buffer.seek(-1);
-            // read in the block size
-            block_size = buffer.readLZXInt16(this.buffer);
-            // set the frame size
-            frame_size = 0x8000;
-        }
-
-        // ensure the block and frame size aren't empty
-        if (block_size == 0 || frame_size == 0)
-            return; //break;  TODO: add loop
-
-        // ensure the block and frame size don't exceed size of integers
-        if (block_size > 0x10000 || frame_size > 0x10000)
-            throw new XnbError('Invalid size read in compression content.');
-
-        Log.debug(`Block Size: ${block_size}, Frame Size: ${frame_size}`);
-
-        // TODO: decommpress the frame/block
-
-        // decompress the file based on frame and block size
-        const decompressed = lzx.decompress(buffer, frame_size, block_size);
 
         // we have finished decompressing the file
         Log.info('File has been successfully decompressed!');
 
-        // return the decompressed buffer
-        return decompressed
+        // return a decompressed buffer
+        return Buffer.from(decompressed);
     }
 }
 

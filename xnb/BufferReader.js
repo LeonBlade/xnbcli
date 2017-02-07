@@ -1,6 +1,7 @@
 const fs = require('fs');
 const Log = require('./Log');
 const XnbError = require('./XnbError');
+const chalk = require('chalk');
 
 class BufferReader {
 
@@ -122,7 +123,6 @@ class BufferReader {
      * @param {Number} length
      */
     copyFrom(buffer, targetIndex = 0, sourceIndex = 0, length = buffer.length) {
-        Log.debug(`CopyFrom: ${targetIndex} -> ${sourceIndex}, ${length}`);
         // we need to resize the buffer to fit the contents
         if (this.buffer.length < length + targetIndex) {
             // create a temporary buffer of the new size
@@ -208,15 +208,12 @@ class BufferReader {
         let bitsLeft = bits;
         let read = 0;
 
-        //Log.debug();
-        //Log.debug(`> Reading ${bits} bits ...`);
-
         // read bits in 16-bit chunks
         while (bitsLeft > 0) {
             // peek in a 16-bit value
             const peek = this.peek(2).readUInt16LE();
 
-            // clamp bits into the 16-bit frame we have left and only read in as much as we have left
+            // clamp bits into the 16-bit frame we have left only read in as much as we have left
             const bitsInFrame = Math.min(Math.max(bitsLeft, 0), 16 - this.bitPosition);
             // set the offset based on current position in and bit count
             const offset = 16 - this.bitPosition - bitsInFrame;
@@ -296,7 +293,27 @@ class BufferReader {
      * @method align
      */
     align() {
+        this.bitPosition += 16 - this.bitPosition;
+    }
 
+    /**
+     * Used only for error logging.
+     * @public
+     */
+    debug() {
+        // store reference to the byte position
+        const bytePosition = this.bytePosition;
+        // move back by 8 bytes
+        this.seek(-8);
+        // read 16 bytes worth of data into an array
+        const read = this.read(15).values();
+        const bytes = [];
+        for (let byte of read)
+            bytes.push('00'.slice(0, 2 - byte.toString(16).length) + byte.toString(16));
+        // replace the selected byte with brackets
+        bytes[7] = chalk.bold.blue('[') + bytes[7] + chalk.bold.blue(']');
+        // log the message
+        console.log(`${chalk.gray(`[${bytePosition}]`)} ${bytes.join(' ')}`);
     }
 }
 

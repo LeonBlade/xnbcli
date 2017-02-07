@@ -83,8 +83,7 @@ class Xnb {
             const compressedTodo = this.fileSize - XNB_COMPRESSED_PROLOGUE_SIZE;
 
             // decompress the buffer based on the file size
-            const decompressed = Presser.decompress(this.buffer);
-
+            const decompressed = Presser.decompress(this.buffer, compressedTodo);
             // copy the decompressed buffer into the file buffer
             this.buffer.copyFrom(decompressed, XNB_COMPRESSED_PROLOGUE_SIZE, 0, decompressedSize);
 
@@ -117,21 +116,22 @@ class Xnb {
             // get the reader for this type
             let simpleType = simplifyType(type);
             let reader = getReader(simpleType);
-
             // add reader to the list
             this.readers.push(reader);
             // add local reader
             readers.push({ type, version });
         }
-
+        
         // get the 7-bit value for shared resources
         const shared = this.buffer.read7BitNumber();
         // log the shared resources count
         Log.debug(`Shared Resources: ${shared}`);
 
-        // don't accept shared resources for now(?)
+        // don't accept shared resources since SDV XNB files don't have any
         if (shared != 0)
             throw new XnbError(`Unexpected (${shared}) shared resources.`);
+
+        Log.debug(JSON.stringify(this.readers));
 
         // create content reader from the readers loaded
         const content = new ReaderResolver(this.readers);
