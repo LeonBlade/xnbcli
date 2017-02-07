@@ -5,15 +5,15 @@ const Xnb = require('./xnb/Xnb');
 const exportFile = require('./xnb/Exporter');
 const XnbError = require('./xnb/XnbError');
 
-// turn on debug printing
-Log.DEBUG = true;
-
 // local variables for input and output to check if they were set later
 let inputValue;
 let outputValue;
 
 // create the program and set version number
 program.version('0.1.0');
+
+// turn on debug printing
+program.option('--debug', 'Enables debug verbose printing.', () => { Log.DEBUG = true; });
 
 // XNB unpack command
 program
@@ -36,8 +36,6 @@ program
 
         // get the output file path
         const outputFile = path.resolve(output, basename + '.json');
-
-        Log.debug(outputFile);
 
         // save the file
         if (exportFile(outputFile, result))
