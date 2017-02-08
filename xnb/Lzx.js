@@ -118,6 +118,9 @@ class Lzx {
             this.maintree_len[i] = 0;
         for (let i = 0; i < NUM_SECONDARY_LENGTHS; i++)
             this.length_len[i] = 0;
+
+        // the decompression window
+        this.win = [];
     }
 
     /**
@@ -128,11 +131,6 @@ class Lzx {
      * @returns {Number[]}
      */
     decompress(buffer, frame_size, block_size) {
-
-        // the decompressed array of bytes in this window
-        const win = [];
-
-        Log.debug(`Lzx.decompress(buffer, ${frame_size}, ${block_size})`);
 
         // read header if we haven't already
         if (!this.header_read) {
@@ -212,15 +210,11 @@ class Lzx {
                 }
             }
 
-            // buffer exhaustion check
-            if (buffer.bytePosition > block_size)
-                if (buffer.bytePosition > (block_size + 2) || buffer.bitPosition < 16)
-                    throw new XnbError('Buffer Exhausted!');
-
             // iterate over the block remaining
-            let this_run = this.block_remaining
+            let this_run = this.block_remaining;
+
             // loop over the bytes left in the buffer to run out our output
-            while (this_run > 0 && togo > 0) {
+            while ((this_run = this.block_remaining) > 0 && togo > 0) {
                 // if this run is somehow higher than togo then just cap it
                 if (this_run > togo)
                     this_run = togo;
@@ -249,7 +243,7 @@ class Lzx {
 
                             // main element is an unmatched character
                             if (main_element < NUM_CHARS) {
-                                win[this.window_posn++] = main_element;
+                                this.win[this.window_posn++] = main_element;
                                 this_run--;
                                 continue;
                             }
@@ -332,9 +326,9 @@ class Lzx {
                                 let copy_length = match_offset - this.window_posn;
                                 if (copy_length < match_length) {
                                     match_length -= copy_length;
-                                    window_posn += copy_length;
+                                    this.window_posn += copy_length;
                                     while (copy_length-- > 0)
-                                        win[rundest++] = win[runsrc++];
+                                        this.win[rundest++] = this.win[runsrc++];
                                     runsrc = 0;
                                 }
                             }
@@ -342,7 +336,7 @@ class Lzx {
 
                             // copy match data - no worrries about destination wraps
                             while (match_length-- > 0)
-                                win[rundest++] = win[runsrc++];
+                                this.win[rundest++] = this.win[runsrc++];
                         }
                         break;
 
@@ -359,7 +353,7 @@ class Lzx {
 
                             // main element is an unmatched character
                             if (main_element < NUM_CHARS) {
-                                win[this.window_posn++] = main_element;
+                                this.win[this.window_posn++] = main_element;
                                 this_run--;
                                 continue;
                             }
@@ -420,7 +414,7 @@ class Lzx {
                                     match_length -= copy_length;
                                     window_posn += copy_length;
                                     while (copy_length-- > 0)
-                                        win[rundest++] = win[runsrc++];
+                                        this.win[rundest++] = this.win[runsrc++];
                                     runsrc = 0;
                                 }
                             }
@@ -428,7 +422,7 @@ class Lzx {
 
                             // copy match data - no worrries about destination wraps
                             while (match_length-- > 0)
-                                win[rundest++] = win[runsrc++];
+                                this.win[rundest++] = this.win[runsrc++];
                         }
                         break;
 
@@ -445,13 +439,14 @@ class Lzx {
         if (togo != 0)
             throw new XnbError('EOF reached with data left to go.');
 
-        Log.debug(JSON.stringify(win));
-
         // ensure the buffer is aligned
         buffer.align();
 
+        // get the start window position
+        const start_window_pos = ((this.window_posn == 0) ? this.window_size : this.window_posn) - frame_size;
+
         // return the window
-        return win;
+        return this.win.slice(start_window_pos, start_window_pos + frame_size);
     }
 
     /**
@@ -469,19 +464,13 @@ class Lzx {
         // read in the 4-bit pre-tree deltas
         for (let i = 0; i < 20; i++)
             this.pretree_len[i] = buffer.readLZXBits(4);
-
-        Log.debug('Pre-tree lengths table');
-        Log.debug(JSON.stringify(this.pretree_len));
-
+            
         // create pre-tree table from lengths
         this.pretree_table = this.decodeTable(
             PRETREE_MAXSYMBOLS,
             PRETREE_TABLEBITS,
             this.pretree_len
         );
-
-        Log.debug('Pre-tree table decoded.');
-        Log.debug(JSON.stringify(this.pretree_table));
 
         // loop through the lengths from first to last
         for (let i = first; i < last;) {
@@ -558,7 +547,7 @@ class Lzx {
         let bit_mask = table_mask >> 1;
 
         // loop across all bit positions
-        for (let bit_num = 0; bit_num <= bits; bit_num++) {
+        for (let bit_num = 1; bit_num <= bits; bit_num++) {
             // loop over the symbols we're decoding
             for (let symbol = 0; symbol < symbols; symbol++) {
                 // if the symbol isn't in this iteration of length then just ignore
@@ -700,24 +689,6 @@ class Lzx {
             this.R2 = this.R0;
             this.R0 = R2;
         }
-    }
-
-    /**
-     * Gets the real offset given an encoded one
-     * @param {Number} offset Encoded offset
-     * @returns {Number} Real offset
-     */
-    getOffset(offset) {
-        // if the encoded offset is 0 - 2 then return the repeated offset
-        if (offset == 0)
-            return this.R0;
-        else if (offset == 1)
-            return this.R1;
-        else if (offset == 2)
-            return this.R2;
-
-        // otherwise return a real offset
-        return offset - 2;
     }
 }
 

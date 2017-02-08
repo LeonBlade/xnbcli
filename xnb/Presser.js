@@ -18,7 +18,7 @@ class Presser {
      * @param {BufferReader} buffer
      * @returns {Buffer}
      */
-    static decompress(buffer, todo) {
+    static decompress(buffer, compressedTodo, decompressedTodo) {
         // current index into the buffer
         let pos = 0;
 
@@ -28,12 +28,14 @@ class Presser {
 
         // create the LZX instance with 16-bit window frame
         const lzx = new Lzx(16);
+        const decompressedBuffer = Buffer.alloc(decompressedTodo);
 
         // the full decompressed array
         let decompressed = [];
+        let z = 0;
 
         // loop over the bytes left
-        while (pos < todo) {
+        while (pos < compressedTodo) {
             // flag is for determining if frame_size is fixed or not
             const flag = buffer.read(1).readUInt8();
 
@@ -67,8 +69,11 @@ class Presser {
 
             Log.debug(`Block Size: ${block_size}, Frame Size: ${frame_size}`);
 
+            const ret = lzx.decompress(buffer, frame_size, block_size);
+            fs.writeFileSync(`/Users/LeonBlade/Desktop/sample/out${z++}.bin`, Buffer.from(ret));
+            
             // decompress the file based on frame and block size
-            decompressed = decompressed.concat(lzx.decompress(buffer, frame_size, block_size));
+            decompressed = decompressed.concat(ret);
 
             // increase position counter
             pos += block_size;
