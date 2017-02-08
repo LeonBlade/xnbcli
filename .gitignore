@@ -6,3 +6,4 @@ node_modules
 
 # Test
 test
+/.vscode
