@@ -207,7 +207,7 @@ class Lzx {
                         throw new XnbError('Blocktype Uncompressed not implemented.');
                         break;
                     default:
-                        throw new XnbError(`Invalid Blocktype Found: ${block_type}`);
+                        throw new XnbError(`Invalid Blocktype Found: ${this.block_type}`);
                         break;
                 }
             }
@@ -235,93 +235,208 @@ class Lzx {
                 if (this.window_posn + this_run > this.window_size)
                     throw new XnbError('Cannot run outside of window frame.');
 
-                //switch (block_type) {
+                switch (this.block_type) {
+                    case BLOCKTYPE.ALIGNED:
+                        while (this_run > 0) {
+                            // get the element of this run
+                            let main_element = this.readHuffSymbol(
+                                buffer,
+                                this.maintree_table,
+                                this.maintree_len,
+                                MAINTREE_MAXSYMBOLS,
+                                MAINTREE_TABLEBITS
+                            );
 
-                // TODO: add switch for block type
-                // NOTE: assuming verbatim
+                            // main element is an unmatched character
+                            if (main_element < NUM_CHARS) {
+                                win[this.window_posn++] = main_element;
+                                this_run--;
+                                continue;
+                            }
 
-                while (this_run > 0) {
-                    // get the main element
-                    let main_element = this.readHuffSymbol(
-                        buffer,
-                        this.maintree_table,
-                        this.maintree_len,
-                        MAINTREE_MAXSYMBOLS,
-                        MAINTREE_TABLEBITS
-                    );
+                            main_element -= NUM_CHARS;
 
-                    // main element is an unmatched character
-                    if (main_element < NUM_CHARS) {
-                        win[this.window_posn++] = main_element;
-                        this_run--;
-                        continue;
-                    }
+                            let length_footer;
 
-                    // match: NUM_CHARS + ((slot << 3) | length_header (3 bits))
+                            let match_length = main_element & NUM_PRIMARY_LENGTHS;
+                            if (match_length == NUM_PRIMARY_LENGTHS) {
+                                // get the length footer
+                                length_footer = this.readHuffSymbol(
+                                    buffer,
+                                    this.length_table,
+                                    this.length_len,
+                                    LENGTH_MAXSYMBOLS,
+                                    LENGTH_TABLEBITS
+                                );
+                                // increase match length by the footer
+                                match_length += length_footer;
+                            }
+                            match_length += MIN_MATCH;
 
-                    main_element -= NUM_CHARS;
+                            let match_offset = main_element >> 3;
 
-                    let length_footer;
+                            if (match_offset > 2) {
+                                // not repeated offset
+                                let extra = extra_bits[match_offset];
+                                match_offset = position_base[match_offset] - 2;
+                                if (extra > 3) {
+                                    // verbatim and aligned bits
+                                    extra -= 3;
+                                    let verbatim_bits = buffer.readLZXBits(extra);
+                                    match_offset += verbatim_bits << 3;
+                                    let aligned_bits = this.readHuffSymbol(
+                                        buffer,
+                                        this.aligned_table,
+                                        this.aligned_len,
+                                        ALIGNED_MAXSYMBOLS,
+                                        ALIGNED_TABLEBITS
+                                    );
+                                    match_offset += aligned_bits;
+                                }
+                                else if (extra == 3) {
+                                    // aligned bits only
+                                    let aligned_bits = this.readHuffSymbol(
+                                        buffer,
+                                        this.aligned_table,
+                                        this.aligned_len,
+                                        ALIGNED_MAXSYMBOLS,
+                                        ALIGNED_TABLEBITS
+                                    );
+                                    match_offset += aligned_bits;
+                                }
+                                else if (extra > 0)
+                                    // verbatim bits only
+                                    match_offset += buffer.readLZXBits(extra);
+                                else
+                                    match_offset = 1; // ???
 
-                    let match_length = main_element & NUM_PRIMARY_LENGTHS;
-                    if (match_length == NUM_PRIMARY_LENGTHS) {
-                        // read the length footer
-                        length_footer = this.readHuffSymbol(
-                            buffer,
-                            this.length_table,
-                            this.length_len,
-                            LENGTH_MAXSYMBOLS,
-                            LENGTH_TABLEBITS
-                        );
-                        match_length += length_footer;
-                    }
-                    match_length += MIN_MATCH;
+                                // update repeated offset LRU queue
+                                this.R = match_offset;
+                            }
+                            else if (match_offset == 0)
+                                match_offset = this.R0;
+                            else if (match_offset == 1)
+                                match_offset = this.R = this.R1;
+                            else
+                                match_offset = this.R = this.R2;
 
-                    let match_offset = main_element >> 3;
+                            let rundest = this.window_posn;
+                            let runsrc;
+                            this_run -= match_length;
 
-                    if (match_offset > 2) {
-                        // not repeated offset
-                        if (match_offset != 3) {
-                            let extra = extra_bits[match_offset];
-                            let verbatim_bits = buffer.readLZXBits(extra);
-                            match_offset = position_base[match_offset] - 2 + verbatim_bits;
-                        }
-                        else
-                            match_offset = 1;
+                            // copy any wrapped around source data
+                            if (this.window_posn >= match_offset)
+                                runsrc = rundest - match_offset; // no wrap
+                            else {
+                                runsrc = rundest + (this.window_size - match_offset);
+                                let copy_length = match_offset - this.window_posn;
+                                if (copy_length < match_length) {
+                                    match_length -= copy_length;
+                                    window_posn += copy_length;
+                                    while (copy_length-- > 0)
+                                        win[rundest++] = win[runsrc++];
+                                    runsrc = 0;
+                                }
+                            }
+                            this.window_posn += match_length;
 
-                        // update repeated offset LRU queue
-                        this.R = match_offset;
-                    }
-                    else if (match_offset == 0)
-                        match_offset = this.R0;
-                    else if (match_offset == 1)
-                        match_offset = this.R = this.R1;
-                    else
-                        match_offset = this.R = this.R2;
-
-                    let rundest = this.window_posn;
-                    let runsrc;
-                    this_run -= match_length;
-
-                    // copy any wrapped around source data
-                    if (this.window_posn >= match_offset)
-                        runsrc = rundest - match_offset; // no wrap
-                    else {
-                        runsrc = rundest + (this.window_size - match_offset);
-                        let copy_length = match_offset - this.window_posn;
-                        if (copy_length < match_length) {
-                            match_length -= copy_length;
-                            window_posn += copy_length;
-                            while (copy_length-- > 0)
+                            // copy match data - no worrries about destination wraps
+                            while (match_length-- > 0)
                                 win[rundest++] = win[runsrc++];
-                            runsrc = 0;
                         }
-                    }
-                    this.window_posn += match_length;
+                        break;
 
-                    // copy match data - no worrries about destination wraps
-                    while (match_length-- > 0)
-                        win[rundest++] = win[runsrc++];
+                    case BLOCKTYPE.VERBATIM:
+                        while (this_run > 0) {
+                            // get the element of this run
+                            let main_element = this.readHuffSymbol(
+                                buffer,
+                                this.maintree_table,
+                                this.maintree_len,
+                                MAINTREE_MAXSYMBOLS,
+                                MAINTREE_TABLEBITS
+                            );
+
+                            // main element is an unmatched character
+                            if (main_element < NUM_CHARS) {
+                                win[this.window_posn++] = main_element;
+                                this_run--;
+                                continue;
+                            }
+
+                            // match: NUM_CHARS + ((slot << 3) | length_header (3 bits))
+
+                            main_element -= NUM_CHARS;
+
+                            let length_footer;
+
+                            let match_length = main_element & NUM_PRIMARY_LENGTHS;
+                            if (match_length == NUM_PRIMARY_LENGTHS) {
+                                // read the length footer
+                                length_footer = this.readHuffSymbol(
+                                    buffer,
+                                    this.length_table,
+                                    this.length_len,
+                                    LENGTH_MAXSYMBOLS,
+                                    LENGTH_TABLEBITS
+                                );
+                                match_length += length_footer;
+                            }
+                            match_length += MIN_MATCH;
+
+                            let match_offset = main_element >> 3;
+
+                            if (match_offset > 2) {
+                                // not repeated offset
+                                if (match_offset != 3) {
+                                    let extra = extra_bits[match_offset];
+                                    let verbatim_bits = buffer.readLZXBits(extra);
+                                    match_offset = position_base[match_offset] - 2 + verbatim_bits;
+                                }
+                                else
+                                    match_offset = 1;
+
+                                // update repeated offset LRU queue
+                                this.R = match_offset;
+                            }
+                            else if (match_offset == 0)
+                                match_offset = this.R0;
+                            else if (match_offset == 1)
+                                match_offset = this.R = this.R1;
+                            else
+                                match_offset = this.R = this.R2;
+
+                            let rundest = this.window_posn;
+                            let runsrc;
+                            this_run -= match_length;
+
+                            // copy any wrapped around source data
+                            if (this.window_posn >= match_offset)
+                                runsrc = rundest - match_offset; // no wrap
+                            else {
+                                runsrc = rundest + (this.window_size - match_offset);
+                                let copy_length = match_offset - this.window_posn;
+                                if (copy_length < match_length) {
+                                    match_length -= copy_length;
+                                    window_posn += copy_length;
+                                    while (copy_length-- > 0)
+                                        win[rundest++] = win[runsrc++];
+                                    runsrc = 0;
+                                }
+                            }
+                            this.window_posn += match_length;
+
+                            // copy match data - no worrries about destination wraps
+                            while (match_length-- > 0)
+                                win[rundest++] = win[runsrc++];
+                        }
+                        break;
+
+                    case BLOCKTYPE.UNCOMPRESSED:
+                        throw new XnbError('Uncompressed blocktype not supported!');
+
+                    default:
+                        throw new XnbError('Invalid blocktype specified!');
                 }
             }
         }
@@ -370,6 +485,7 @@ class Lzx {
 
         // loop through the lengths from first to last
         for (let i = first; i < last;) {
+
             // read in the huffman symbol
             let symbol = this.readHuffSymbol(
                 buffer,
@@ -442,20 +558,25 @@ class Lzx {
         let bit_mask = table_mask >> 1;
 
         // loop across all bit positions
-        for (let bit_num = 1; bit_num <= bits; bit_num++) {
+        for (let bit_num = 0; bit_num <= bits; bit_num++) {
             // loop over the symbols we're decoding
             for (let symbol = 0; symbol < symbols; symbol++) {
                 // if the symbol isn't in this iteration of length then just ignore
-                if (length[symbol] != bit_num)
-                    continue;
-                let leaf = pos;
-                // if the position has gone past the table mask then we're overrun
-                if ((pos += bit_mask) > table_mask)
-                    throw new XnbError('Overrun table.');
-                // fill all possible lookups of this symbol with the symbol itself
-                let fill = bit_mask;
-                while (fill-- > 0)
-                    table[leaf++] = symbol;
+                if (length[symbol] == bit_num) {
+                    let leaf = pos;
+                    // if the position has gone past the table mask then we're overrun
+                    if ((pos += bit_mask) > table_mask) {
+                        Log.debug(length[symbol]);
+                        Log.debug(`pos: ${pos}, bit_mask: ${bit_mask}, table_mask: ${table_mask}`);
+                        Log.debug(`bit_num: ${bit_num}, bits: ${bits}`);
+                        Log.debug(`symbol: ${symbol}, symbols: ${symbols}`);
+                        throw new XnbError('Overrun table!');
+                    }
+                    // fill all possible lookups of this symbol with the symbol itself
+                    let fill = bit_mask;
+                    while (fill-- > 0)
+                        table[leaf++] = symbol;
+                }
             }
             // advance bit mask down the bit positions
             bit_mask >>= 1;
@@ -467,7 +588,7 @@ class Lzx {
 
         // mark all remaining table entries as unused
         for (let symbol = pos; symbol < table_mask; symbol++)
-            table[sym] = 0xFFFF;
+            table[symbol] = 0xFFFF;
 
         // next_symbol = base of allocation for long codes
         let next_symbol = ((table_mask >> 1) < symbols) ? symbols : (table_mask >> 1);
@@ -532,12 +653,21 @@ class Lzx {
      */
     readHuffSymbol(buffer, table, length, symbols, bits) {
         // peek the specified bits ahead
-        let bit = buffer.peekLZXBits(bits);
-        let i = table[bit];
+        let bit = (buffer.peekLZXBits(32) >>> 0); // (>>> 0) allows us to get a 32-bit uint
+        let i = table[buffer.peekLZXBits(bits)];
 
         // if our table is accessing a symbol beyond our range
-        if (i >= symbols)
-            throw new XnbError('Access table beyond symbol range.');
+        if (i >= symbols) {
+            let j = 1 << (32 - bits);
+            do {
+                j >>= 1;
+                i <<= 1;
+                i |= (bit & j) != 0 ? 1 : 0;
+                if (j == 0)
+                    return 0;
+            }
+            while ((i = table[i]) >= symbols)
+        }
 
         // seek past this many bits
         buffer.bitPosition += length[i];

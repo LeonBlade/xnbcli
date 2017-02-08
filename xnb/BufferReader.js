@@ -276,8 +276,8 @@ class BufferReader {
      */
     readLZXInt16(seek = true) {
         // read in the next two bytes worth of data
-        let lsB = this.read(1).readUInt8();
-        let msB = this.read(1).readUInt8();
+        const lsB = this.read(1).readUInt8();
+        const msB = this.read(1).readUInt8();
 
         // rewind the seek head
         if (!seek)
