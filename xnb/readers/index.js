@@ -2,6 +2,7 @@
 const readers = [
     'ArrayReader',
     'BaseReader',
+    'BmFontReader',
     'BooleanReader',
     'CharReader',
     'DictionaryReader',

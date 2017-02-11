@@ -35,6 +35,9 @@ const exportFile = (filename, xnbObject) => {
         // get the exported buffer from found
         const exported = found.value;
 
+        if (exported == undefined || exported.type == undefined || exported.data == undefined)
+            throw new XnbError('Invalid file export!');
+
         // log that we are exporting additional data
         Log.info(`Exporting ${exported.type} ...`);
 
@@ -67,6 +70,11 @@ const exportFile = (filename, xnbObject) => {
             // TODO: TBin to tbin or tmx
             case 'TBin':
                 extension = 'tbin';
+                break;
+            
+            // BmFont Xml
+            case 'BmFont':
+                extension = 'xml';
                 break;
         }
 
