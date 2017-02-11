@@ -305,15 +305,24 @@ class Lzx {
                                     match_offset = 1; // ???
 
                                 // update repeated offset LRU queue
-                                this.R = match_offset;
+                                this.R2 = this.R1;
+                                this.R1 = this.R0;
+                                this.R0 = match_offset;
                             }
-                            else if (match_offset == 0)
+                            else if (match_offset === 0) {
                                 match_offset = this.R0;
-                            else if (match_offset == 1)
-                                match_offset = this.R = this.R1;
-                            else
-                                match_offset = this.R = this.R2;
-
+                            }
+                            else if (match_offset == 1) {
+                                match_offset = this.R1;
+                                this.R1 = this.R0;
+                                this.R0 = match_offset;
+                            }
+                            else {
+                                match_offset = this.R2;
+                                this.R2 = this.R0;
+                                this.R0 = match_offset;
+                            }
+                   
                             let rundest = this.window_posn;
                             let runsrc;
                             this_run -= match_length;
@@ -391,14 +400,23 @@ class Lzx {
                                     match_offset = 1;
 
                                 // update repeated offset LRU queue
-                                this.R = match_offset;
+                                this.R2 = this.R1;
+                                this.R1 = this.R0;
+                                this.R0 = match_offset;
                             }
-                            else if (match_offset == 0)
+                            else if (match_offset === 0) {
                                 match_offset = this.R0;
-                            else if (match_offset == 1)
-                                match_offset = this.R = this.R1;
-                            else
-                                match_offset = this.R = this.R2;
+                            }
+                            else if (match_offset == 1) {
+                                match_offset = this.R1;
+                                this.R1 = this.R0;
+                                this.R0 = match_offset;
+                            }
+                            else {
+                                match_offset = this.R2;
+                                this.R2 = this.R0;
+                                this.R0 = match_offset;
+                            }
 
                             let rundest = this.window_posn;
                             let runsrc;
@@ -412,7 +430,7 @@ class Lzx {
                                 let copy_length = match_offset - this.window_posn;
                                 if (copy_length < match_length) {
                                     match_length -= copy_length;
-                                    window_posn += copy_length;
+                                    this.window_posn += copy_length;
                                     while (copy_length-- > 0)
                                         this.win[rundest++] = this.win[runsrc++];
                                     runsrc = 0;
@@ -669,7 +687,7 @@ class Lzx {
      * Sets the shortest match.
      * @param {Number} X
      */
-    set R(X) {
+    set RRR(X) {
         // No match, R2 <- R1, R1 <- R0, R0 <- X
         if (this.R0 != X && this.R1 != X && this.R2 != X) {
             // shift all offsets down
