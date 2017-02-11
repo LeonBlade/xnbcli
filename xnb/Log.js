@@ -1,26 +1,40 @@
 const chalk = require('chalk');
 
+const LOG_DEBUG = 0b0001;
+const LOG_INFO = 0b0010;
+const LOG_WARN = 0b0100;
+const LOG_ERROR = 0b1000;
+
+let _info = true, _warn = true, _error = true, _debug = false;
+
 /**
  * Log class with static members to log messages to the console.
+ * @class
+ * @static
  */
 class Log {
 
-    /**
-     * Constructor for Log class.
-     * @constructor
-     * @param {Boolean} [debug] True if you want to print debug information.
-     */
-    constructor(debug = false) {
-        this._debug = debug;
-    }
+    static get DEBUG()  { return LOG_DEBUG }
+    static get INFO()   { return LOG_INFO }
+    static get WARN()   { return LOG_WARN }
+    static get ERROR()  { return LOG_ERROR }
 
     /**
      * Sets the debug mode setting.
-     * @method debug
-     * @param  {Boolean} mode State of displaying debug logs in the console.
+     * @public
+     * @method setMode
+     * @param {Number} log
+     * @param {Boolean} state
      */
-    static set DEBUG(mode) {
-        this._debug = mode;
+    static setMode(log, state) {
+        if (log & LOG_DEBUG)
+            _debug = state;
+        if (log & LOG_INFO)
+            _info = state;
+        if (log & LOG_WARN)
+            _warn = state;
+        if (log & LOG_ERROR)
+            _error = state;
     }
 
     /**
@@ -28,7 +42,8 @@ class Log {
      * @param {String} message Message to display to the console as info.
      */
     static info(message = '') {
-        console.log(chalk.bold.blue('[INFO] ') + message);
+        if (_info)
+            console.log(chalk.bold.blue('[INFO] ') + message);
     }
 
     /**
@@ -36,7 +51,7 @@ class Log {
      * @param {String} message Message to display to the console if debug is enabled.
      */
     static debug(message = '') {
-        if (this._debug)
+        if (_debug)
             console.log(chalk.bold.green('[DEBUG] ') + message);
     }
 
@@ -45,7 +60,8 @@ class Log {
      * @param {String} message Message to display to the console as a warning.
      */
     static warn(message = '') {
-        console.log(chalk.bold.yellow('[WARN] ') + message);
+        if (_warn)
+            console.log(chalk.bold.yellow('[WARN] ') + message);
     }
 
     /**
@@ -53,7 +69,8 @@ class Log {
      * @param {String} message Message to display to the console as an error.
      */
     static error(message = '') {
-        console.log(chalk.bold.red('[ERROR] ') + message);
+        if (_error)
+            console.log(chalk.bold.red('[ERROR] ') + message);
     }
 
     /**
