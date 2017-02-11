@@ -28,6 +28,8 @@ program
         // if output is undefined then set path to input path
         if (output == undefined)
             output = path.dirname(input);
+        else   
+            output = path.resolve(output, path.dirname(input));
 
         // get the basename from the input
         const basename = path.basename(input, '.xnb');
