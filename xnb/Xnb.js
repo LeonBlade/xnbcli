@@ -86,7 +86,6 @@ class Xnb {
             const decompressed = Presser.decompress(this.buffer, compressedTodo, decompressedSize);
             // copy the decompressed buffer into the file buffer
             this.buffer.copyFrom(decompressed, XNB_COMPRESSED_PROLOGUE_SIZE, 0, decompressedSize);
-            require('fs').writeFileSync('/Users/LeonBlade/Desktop/test.bin', decompressed);
 
             // reset the byte seek head to read content
             this.buffer.bytePosition = XNB_COMPRESSED_PROLOGUE_SIZE;
