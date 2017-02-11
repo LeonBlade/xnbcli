@@ -121,7 +121,7 @@ class Xnb {
             // add local reader
             readers.push({ type, version });
         }
-        
+
         // get the 7-bit value for shared resources
         const shared = this.buffer.read7BitNumber();
         // log the shared resources count
@@ -130,8 +130,6 @@ class Xnb {
         // don't accept shared resources since SDV XNB files don't have any
         if (shared != 0)
             throw new XnbError(`Unexpected (${shared}) shared resources.`);
-
-        Log.debug(JSON.stringify(this.readers));
 
         // create content reader from the readers loaded
         const content = new ReaderResolver(this.readers);
