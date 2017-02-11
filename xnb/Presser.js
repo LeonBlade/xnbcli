@@ -69,11 +69,8 @@ class Presser {
 
             Log.debug(`Block Size: ${block_size}, Frame Size: ${frame_size}`);
 
-            const ret = lzx.decompress(buffer, frame_size, block_size);
-            fs.writeFileSync(`/Users/LeonBlade/Desktop/sample/out${z++}.bin`, Buffer.from(ret));
-            
             // decompress the file based on frame and block size
-            decompressed = decompressed.concat(ret);
+            decompressed = decompressed.concat(lzx.decompress(buffer, frame_size, block_size));
 
             // increase position counter
             pos += block_size;
