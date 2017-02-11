@@ -41,6 +41,14 @@ class Texture2DReader extends BaseReader {
         else if (format != 0)
             throw new XnbError(`Non-implemented Texture2D format type (${format}) found.`);
 
+        // add the alpha channel into the image
+        for(let i = 0; i < data.length; i += 4) {
+            let inverseAlpha = 255 / data[i + 3];
+            data[i    ] = Math.min(Math.ceil(data[i    ] * inverseAlpha), 255);
+            data[i + 1] = Math.min(Math.ceil(data[i + 1] * inverseAlpha), 255);
+            data[i + 2] = Math.min(Math.ceil(data[i + 2] * inverseAlpha), 255);
+        }
+
         return {
             format,
             width,
