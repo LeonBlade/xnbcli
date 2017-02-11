@@ -15,7 +15,7 @@ let success = 0;
 let fail = 0;
 
 // create the program and set version number
-program.version('0.1.0');
+program.version('0.5.0');
 
 // turn on debug printing
 program.option('--debug', 'Enables debug verbose printing.', () => { Log.setMode(Log.DEBUG, true) });
@@ -62,7 +62,7 @@ function processUnpack(input, output) {
     if (stats.isDirectory())
         for (let dir of fs.readdirSync(input))
             processUnpack(path.resolve(input, dir), path.resolve(output, path.basename(input), path.dirname(dir)));
-    else {
+    else if (path.extname(input).toLocaleLowerCase() == "xnb") {
         // create new instance of XNB
         const xnb = new Xnb();
 

@@ -289,14 +289,13 @@ class Lzx {
                                 }
                                 else if (extra == 3) {
                                     // aligned bits only
-                                    let aligned_bits = this.readHuffSymbol(
+                                    match_offset += this.readHuffSymbol(
                                         buffer,
                                         this.aligned_table,
                                         this.aligned_len,
                                         ALIGNED_MAXSYMBOLS,
                                         ALIGNED_TABLEBITS
                                     );
-                                    match_offset += aligned_bits;
                                 }
                                 else if (extra > 0)
                                     // verbatim bits only

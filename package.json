@@ -1,6 +1,6 @@
 {
   "name": "xnbcli",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "XNB CLI tool for packing and unpacking XNB files.",
   "main": "index.js",
   "scripts": {

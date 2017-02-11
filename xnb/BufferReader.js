@@ -140,8 +140,6 @@ class BufferReader {
         }
     }
 
-    // [XX|XX]XXXX|
-
     /**
      * Reads a specific number of bytes.
      * @public
@@ -293,7 +291,8 @@ class BufferReader {
      * @method align
      */
     align() {
-        this.bitPosition += 16 - this.bitPosition;
+        if (this.bitPosition > 0)
+            this.bitPosition += 16 - this.bitPosition;
     }
 
     /**
