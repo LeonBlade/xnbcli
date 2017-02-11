@@ -109,13 +109,14 @@ class Xnb {
         // loop over the number of readers we have
         for (let i = 0; i < count; i++) {
             // read the type
-            let type = stringReader.read(this.buffer);
+            const type = stringReader.read(this.buffer);
             // read the version
-            let version = this.buffer.read(4).readInt32LE();
+            const version = this.buffer.read(4).readInt32LE();
 
             // get the reader for this type
-            let simpleType = simplifyType(type);
-            let reader = getReader(simpleType);
+            const simpleType = simplifyType(type);
+            const reader = getReader(simpleType);
+
             // add reader to the list
             this.readers.push(reader);
             // add local reader
@@ -124,6 +125,7 @@ class Xnb {
 
         // get the 7-bit value for shared resources
         const shared = this.buffer.read7BitNumber();
+
         // log the shared resources count
         Log.debug(`Shared Resources: ${shared}`);
 

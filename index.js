@@ -11,6 +11,7 @@ const chalk = require('chalk');
 let inputValue;
 let outputValue;
 
+// used for displaying the tally of success and fail
 let success = 0;
 let fail = 0;
 
@@ -18,8 +19,14 @@ let fail = 0;
 program.version('0.5.0');
 
 // turn on debug printing
-program.option('--debug', 'Enables debug verbose printing.', () => { Log.setMode(Log.DEBUG, true) });
-program.option('--only-error', 'Only prints error messages.', () => { Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false) });
+program.option('--debug', 'Enables debug verbose printing.', () => { 
+    Log.setMode(Log.DEBUG, true); 
+});
+
+// only display errors
+program.option('--errors', 'Only prints error messages.', () => { 
+    Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false); 
+});
 
 // XNB unpack command
 program
@@ -28,6 +35,7 @@ program
     .action((input, output) => {
         // process the upack
         processUnpack(input, output);
+
         // give a final analysis of the files
         console.log(`${chalk.bold.green('Success')} ${success}`);
         console.log(`${chalk.bold.red('Fail')} ${fail}`);
@@ -62,16 +70,17 @@ function processUnpack(input, output) {
     if (stats.isDirectory())
         for (let dir of fs.readdirSync(input))
             processUnpack(path.resolve(input, dir), path.resolve(output, path.basename(input), path.dirname(dir)));
-    else if (path.extname(input).toLocaleLowerCase() == "xnb") {
-        // create new instance of XNB
-        const xnb = new Xnb();
-
+    else if (path.extname(input).toLocaleLowerCase() == '.xnb') {
+        // catch any exceptions to keep a batch of files moving
         try {
+             // create new instance of XNB
+            const xnb = new Xnb();
+
             // load the XNB and get the object from it
             const result = xnb.load(input);
 
             // if output is undefined then set path to input path
-            if (output == undefined)
+            if (output === undefined)
                 output = path.dirname(input);
 
             // get the basename from the input
@@ -92,7 +101,8 @@ function processUnpack(input, output) {
             success++;
         }
         catch (ex) {
-            Log.error(`Filename: ${path.basename(input)}\n${ex.stack}`);
+            // log out the error
+            Log.error(`Filename: ${path.basename(input)}\n${ex.stack}\n`);
             // increase fail count
             fail++;
         }

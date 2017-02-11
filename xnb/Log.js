@@ -14,10 +14,10 @@ let _info = true, _warn = true, _error = true, _debug = false;
  */
 class Log {
 
-    static get DEBUG()  { return LOG_DEBUG }
-    static get INFO()   { return LOG_INFO }
-    static get WARN()   { return LOG_WARN }
-    static get ERROR()  { return LOG_ERROR }
+    static get DEBUG()  { return LOG_DEBUG; }
+    static get INFO()   { return LOG_INFO; }
+    static get WARN()   { return LOG_WARN; }
+    static get ERROR()  { return LOG_ERROR; }
 
     /**
      * Sets the debug mode setting.
