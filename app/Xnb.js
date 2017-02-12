@@ -13,6 +13,8 @@ const XNB_COMPRESSED_PROLOGUE_SIZE = 14;
 
 /**
  * XNB file class used to read and write XNB files
+ * @class
+ * @public
  */
 class Xnb {
 

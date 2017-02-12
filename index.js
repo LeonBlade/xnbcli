@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const program = require('commander');
-const Log = require('./xnb/Log');
-const Xnb = require('./xnb/Xnb');
-const exportFile = require('./xnb/Exporter');
-const XnbError = require('./xnb/XnbError');
+const Log = require('./app/Log');
+const Xnb = require('./app/Xnb');
+const exportFile = require('./app/Exporter');
+const XnbError = require('./app/XnbError');
 const chalk = require('chalk');
 
 // local variables for input and output to check if they were set later
@@ -19,13 +19,13 @@ let fail = 0;
 program.version('0.5.0');
 
 // turn on debug printing
-program.option('--debug', 'Enables debug verbose printing.', () => { 
-    Log.setMode(Log.DEBUG, true); 
+program.option('--debug', 'Enables debug verbose printing.', () => {
+    Log.setMode(Log.DEBUG, true);
 });
 
 // only display errors
-program.option('--errors', 'Only prints error messages.', () => { 
-    Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false); 
+program.option('--errors', 'Only prints error messages.', () => {
+    Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false);
 });
 
 // XNB unpack command
