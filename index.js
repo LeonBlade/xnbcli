@@ -3,6 +3,7 @@ const path = require('path');
 const program = require('commander');
 const Log = require('./app/Log');
 const Xnb = require('./app/Xnb');
+const Xact = require('./app/Xact');
 const exportFile = require('./app/Exporter');
 const XnbError = require('./app/XnbError');
 const chalk = require('chalk');
@@ -105,12 +106,23 @@ function processUnpack(input, output) {
         }
         catch (ex) {
             // log out the error
-            Log.error(`Filename: ${path.basename(input)}\n${ex.stack}\n`);
+            Log.error(`Filename: ${input}\n${ex.stack}\n`);
             // increase fail count
             fail++;
         }
         finally {
             // TODO: remove broken file output
+        }
+    }
+    // for XACT files
+    else if (ext == '.xgs' || ext == '.xwb' || ext == '.xsb') {
+        try {
+            // load the input file
+            Xact.load(input);
+        }
+        catch (ex) {
+            // log out the error
+            Log.error(`Filename: ${path.basename(input)}\n${ex.stack}\n`);
         }
     }
 }
