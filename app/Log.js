@@ -52,7 +52,7 @@ class Log {
      */
     static debug(message = '') {
         if (_debug)
-            console.log(chalk.bold.green('[DEBUG] ') + message);
+            console.log(chalk.bold.magenta('[DEBUG] ') + message);
     }
 
     /**
@@ -79,6 +79,7 @@ class Log {
      * @param {Number} size
      * @param {Number} sliceBegin
      * @param {Number} sliceEnd
+     * @returns {String}
      */
     static b(n, size = 8, sliceBegin = -1, sliceEnd = -1) {
         var z = ''
@@ -91,6 +92,15 @@ class Log {
                 chalk.gray(z.slice(0, sliceBegin)) +
                 chalk.bold.blue('[') + chalk.bold(z.slice(sliceBegin, sliceEnd)) + chalk.bold.blue(']') +
                 chalk.gray(z.slice(sliceEnd));
+    }
+
+    /**
+     * Displays a hex message
+     * @param {Number} n
+     * @returns {String}
+     */
+    static h(n) {
+        return `0x${n.toString(16)}`;
     }
 }
 
