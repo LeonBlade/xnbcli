@@ -35,15 +35,25 @@ class BufferReader {
          * @type {Number}
          */
         this._bitOffset = 0;
+
+        /**
+         * Last debug location for logging byte locations
+         * @private
+         * @type {Number}
+         */
+        this._lastDebugLoc = 0;
     }
 
     /**
     * Seeks to a specific index in the buffer.
     * @public
     * @param {Number} index Sets the buffer seek index.
+    * @param {Number} origin Location to seek from
     */
-    seek(index) {
-        this._offset += Number.parseInt(index);
+    seek(index, origin = this._offset) {
+        const offset = this._offset;
+        this._offset = Math.max(origin + Number.parseInt(index), 0);
+        return this._offset - offset;
     }
 
     /**
@@ -152,6 +162,8 @@ class BufferReader {
         const buffer = this.buffer.slice(this._offset, this._offset + count);
         // advance seek offset
         this.seek(count);
+        // debug this read
+        //if (this._debug_mode) this.debug();
         // return the read buffer
         return buffer;
     }
@@ -303,16 +315,35 @@ class BufferReader {
         // store reference to the byte position
         const bytePosition = this.bytePosition;
         // move back by 8 bytes
-        this.seek(-8);
+        const diff = Math.abs(this.seek(-8));
         // read 16 bytes worth of data into an array
-        const read = this.read(15).values();
+        const read = this.peek(17).values();
         const bytes = [];
-        for (let byte of read)
-            bytes.push('00'.slice(0, 2 - byte.toString(16).length) + byte.toString(16));
+        const chars = [];
+        let i = 0;
+        for (let byte of read) {
+            bytes.push('00'.slice(0, 2 - byte.toString(16).length) + byte.toString(16).toUpperCase());
+            let char;
+            if (byte > 0x1f && byte < 0x7E)
+                char = String.fromCharCode(byte);
+            else
+                char = ' ';
+            chars.push(char);
+            i++;
+        }
+        const ldlpos = diff - (bytePosition - this._lastDebugLoc);
         // replace the selected byte with brackets
-        bytes[7] = chalk.bold.blue('[') + bytes[7] + chalk.bold.blue(']');
+        bytes[diff] = chalk.black.bgBlue(bytes[diff]);
+        bytes[ldlpos] = chalk.black.bgMagenta(bytes[ldlpos]);
+
         // log the message
-        console.log(`${chalk.gray(`[${bytePosition}]`)} ${bytes.join(' ')}`);
+        console.log(bytes.join(' '));
+        console.log(chalk.gray(chars.join('  ')));
+
+        // re-seek back
+        this.seek(bytePosition, 0);
+        // update last debug loc
+        this._lastDebugLoc = bytePosition;
     }
 }
 
