@@ -66,11 +66,14 @@ if (!process.argv.slice(2).length)
 function processUnpack(input, output) {
     // get stats for the input
     const stats = fs.statSync(input);
+    // get the extension
+    const ext = path.extname(input).toLocaleLowerCase();
     // check if input is a directory
     if (stats.isDirectory())
         for (let dir of fs.readdirSync(input))
             processUnpack(path.resolve(input, dir), path.resolve(output, path.basename(input), path.dirname(dir)));
-    else if (path.extname(input).toLocaleLowerCase() == '.xnb') {
+    // for XNB files
+    else if (ext == '.xnb') {
         // catch any exceptions to keep a batch of files moving
         try {
              // create new instance of XNB
