@@ -37,8 +37,8 @@ program
         processUnpack(input, output);
 
         // give a final analysis of the files
-        console.log(`${chalk.bold.green('Success')} ${success}`);
-        console.log(`${chalk.bold.red('Fail')} ${fail}`);
+        //console.log(`${chalk.bold.green('Success')} ${success}`);
+        //console.log(`${chalk.bold.red('Fail')} ${fail}`);
     });
 
 // XNB pack Command
