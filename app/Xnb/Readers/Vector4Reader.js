@@ -1,15 +1,15 @@
 const BaseReader = require('./BaseReader');
-const BufferReader = require('../BufferReader');
+const BufferReader = require('../../BufferReader');
 const SingleReader = require('./SingleReader');
 
 /**
- * Vector3 Reader
+ * Vector4 Reader
  * @class
  * @extends BaseReader
  */
-class Vector3Reader extends BaseReader {
+class Vector4Reader extends BaseReader {
     /**
-     * Reads Vector3 from buffer.
+     * Reads Vector4 from buffer.
      * @param {BufferReader} buffer
      * @returns {object}
      */
@@ -19,9 +19,10 @@ class Vector3Reader extends BaseReader {
         let x = singleReader.read(buffer);
         let y = singleReader.read(buffer);
         let z = singleReader.read(buffer);
+        let w = singleReader.read(buffer);
 
-        return { x, y, z };
+        return { x, y, z, w };
     }
 }
 
-module.exports = Vector3Reader;
+module.exports = Vector4Reader;

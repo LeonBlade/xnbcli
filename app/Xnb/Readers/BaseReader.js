@@ -1,4 +1,4 @@
-const XnbError = require('../XnbError');
+const XnbError = require('../../XnbError');
 
 /**
  * Base class for all readers.

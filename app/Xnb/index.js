@@ -1,10 +1,11 @@
-const BufferReader = require('./BufferReader');
-const Log = require('./Log');
+const BufferReader = require('../BufferReader');
+const Log = require('../Log');
+const XnbError = require('../XnbError');
+
 const { simplifyType, getReader } = require('./TypeReader');
-const { StringReader } = require('./readers');
+const { StringReader } = require('./Readers');
 const ReaderResolver = require('./ReaderResolver');
-const XnbError = require('./XnbError');
-const Presser = require('./Presser');
+const Presser = require('../Presser');
 
 // "constants" for this class
 const HIDEF_MASK = 0x1;

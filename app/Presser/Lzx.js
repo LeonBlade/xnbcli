@@ -1,6 +1,6 @@
-const Log = require('./Log');
-const BufferReader = require('./BufferReader');
-const XnbError = require('./XnbError');
+const Log = require('../Log');
+const BufferReader = require('../BufferReader');
+const XnbError = require('../XnbError');
 
 // LZX Constants
 const MIN_MATCH = 2; // smallest allowable match length
@@ -321,7 +321,7 @@ class Lzx {
                                 this.R2 = this.R0;
                                 this.R0 = match_offset;
                             }
-                   
+
                             let rundest = this.window_posn;
                             let runsrc;
                             this_run -= match_length;
@@ -481,7 +481,7 @@ class Lzx {
         // read in the 4-bit pre-tree deltas
         for (let i = 0; i < 20; i++)
             this.pretree_len[i] = buffer.readLZXBits(4);
-            
+
         // create pre-tree table from lengths
         this.pretree_table = this.decodeTable(
             PRETREE_MAXSYMBOLS,

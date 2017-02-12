@@ -1,7 +1,7 @@
-const BufferReader = require('./BufferReader');
 const TypeReader = require('./TypeReader');
-const Log = require('./Log');
-const XnbError = require('./XnbError');
+const Log = require('../Log');
+const BufferReader = require('../BufferReader');
+const XnbError = require('../XnbError');
 
 /**
  * Class used to read the XNB types using the readers

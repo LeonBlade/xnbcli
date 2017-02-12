@@ -1,5 +1,5 @@
 const BaseReader = require('./BaseReader');
-const BufferReader = require('../BufferReader');
+const BufferReader = require('../../BufferReader');
 const ReaderResolver = require('../ReaderResolver');
 
 /**

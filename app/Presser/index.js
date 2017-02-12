@@ -1,8 +1,8 @@
 const fs = require('fs');
 const Lzx = require('./Lzx');
-const BufferReader = require('./BufferReader');
-const XnbError = require('./XnbError');
-const Log = require('./Log');
+const BufferReader = require('../BufferReader');
+const XnbError = require('../XnbError');
+const Log = require('../Log');
 
 /**
  * Used to compress and decompress LZX.

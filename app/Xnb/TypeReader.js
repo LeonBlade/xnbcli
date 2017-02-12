@@ -1,8 +1,8 @@
-const Log = require('./Log');
-const BufferReader = require('./BufferReader');
+const Log = require('../Log');
+const BufferReader = require('../BufferReader');
 const ReaderResolver = require('./ReaderResolver');
-const XnbError = require('./XnbError');
-const Readers = require('./readers');
+const XnbError = require('../XnbError');
+const Readers = require('./Readers');
 
 /**
  * Used to simplify type from XNB file.

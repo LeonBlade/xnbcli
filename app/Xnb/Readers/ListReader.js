@@ -1,13 +1,14 @@
 const BaseReader = require('./BaseReader');
-const BufferReader = require('../BufferReader');
+const BufferReader = require('../../BufferReader');
+const ReaderResolver = require('../ReaderResolver');
 const UInt32Reader = require('./UInt32Reader');
 
 /**
- * Array Reader
+ * List Reader
  * @class
  * @extends BaseReader
  */
-class ArrayReader extends BaseReader {
+class ListReader extends BaseReader {
     constructor(reader) {
         super();
         /** @type {BaseReader} */
@@ -15,38 +16,26 @@ class ArrayReader extends BaseReader {
     }
 
     /**
-     * Reads Array from buffer.
+     * Reads List from buffer.
      * @param {BufferReader} buffer
      * @param {ReaderResolver} resolver
      * @returns {Array}
      */
     read(buffer, resolver) {
-        // create a uint32 reader
         const uint32Reader = new UInt32Reader();
-        // read the number of elements in the array
         let size = uint32Reader.read(buffer);
-        // create local array
-        let array = [];
 
-        // loop size number of times for the array elements
+        let list = [];
         for (let i = 0; i < size; i++) {
-            // get value from buffer
             let value = this.reader.isValueType() ? this.reader.read(buffer) : resolver.read(buffer);
-            // push into local array
-            array.push(value);
+            list.push(value);
         }
-
-        // return the array
-        return array;
-    }
-
-    isValueType() {
-        return false;
+        return list;
     }
 
     get type() {
-        return `Array<${this.reader.type}>`;
+        return `List<${this.reader.type}>`;
     }
 }
 
-module.exports = ArrayReader;
+module.exports = ListReader;

@@ -1,10 +1,10 @@
 const BaseReader = require('./BaseReader');
-const BufferReader = require('../BufferReader');
+const BufferReader = require('../../BufferReader');
 const Int32Reader = require('./Int32Reader');
 const UInt32Reader = require('./UInt32Reader');
 const dxt = require('dxt');
-const Log = require('../Log');
-const XnbError = require('../XnbError');
+const Log = require('../../Log');
+const XnbError = require('../../XnbError');
 
 /**
  * Texture2D Reader
