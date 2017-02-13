@@ -179,11 +179,29 @@ class BufferReader {
     }
 
     /**
-     * Reads a single byte returned as a uint8
+     * Reads a single byte
      * @public
      * @returns {Number}
      */
     readByte() {
+        return this.readUInt();
+    }
+
+    /**
+     * Reads an int8
+     * @public
+     * @returns {Number}
+     */
+    readInt() {
+        return this.read(1).readInt8();
+    }
+
+    /**
+     * Reads an uint8
+     * @public
+     * @returns {Number}
+     */
+    readUInt() {
         return this.read(1).readUInt8();
     }
 
@@ -293,11 +311,29 @@ class BufferReader {
     }
 
     /**
-     * Peeks a single byte returned as a uint8
+     * Peeks a single byte
      * @public
      * @returns {Number}
      */
     peekByte() {
+        return this.peekUInt();
+    }
+
+    /**
+     * Peeks an int8
+     * @public
+     * @returns {Number}
+     */
+    peekInt() {
+        return this.peek(1).readInt8();
+    }
+
+    /**
+     * Peeks an uint8
+     * @public
+     * @returns {Number}
+     */
+    peekUInt() {
         return this.peek(1).readUInt8();
     }
 
