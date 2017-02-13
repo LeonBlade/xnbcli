@@ -13,7 +13,7 @@ class SingleReader extends BaseReader {
      * @returns {Number}
      */
     read(buffer) {
-        return buffer.read(4).readFloatLE();
+        return buffer.readSingle();
     }
 }
 

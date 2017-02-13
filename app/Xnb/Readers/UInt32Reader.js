@@ -13,7 +13,7 @@ class UInt32Reader extends BaseReader {
      * @returns {Number}
      */
     read(buffer) {
-        return buffer.read(4).readUInt32LE();
+        return buffer.readUInt32();
     }
 }
 

@@ -67,7 +67,7 @@ class Xnb {
         Log.info('XNB file validated successfully!');
 
         // read the file size
-        this.fileSize = this.buffer.read(4).readUInt32LE();
+        this.fileSize = this.buffer.readUInt32();
 
         // verify the size
         if (this.buffer.size != this.fileSize)
@@ -79,7 +79,7 @@ class Xnb {
         // if the file is compressed then we need to decompress it
         if (this.compressed) {
             // get the decompressed size
-            const decompressedSize = this.buffer.read(4).readUInt32LE();
+            const decompressedSize = this.buffer.readUInt32();
             Log.debug(`Uncompressed size: ${decompressedSize} bytes.`);
 
             // get the amount of data to compress
@@ -114,7 +114,7 @@ class Xnb {
             // read the type
             const type = stringReader.read(this.buffer);
             // read the version
-            const version = this.buffer.read(4).readInt32LE();
+            const version = this.buffer.readInt32();
 
             // get the reader for this type
             const simpleType = simplifyType(type);
@@ -176,7 +176,7 @@ class Xnb {
             throw new XnbError('Buffer is null');
 
         // get the magic from the beginning of the file
-        const magic = this.buffer.read(3).toString();
+        const magic = this.buffer.readString(3);
         // check to see if the magic is correct
         if (magic != 'XNB')
             throw new XnbError(`Invalid file magic found, expecting "XNB", found "${magic}"`);
@@ -185,7 +185,7 @@ class Xnb {
         Log.debug('Valid XNB magic found!');
 
         // load the target platform
-        this.target = this.buffer.read(1).toString().toLowerCase();
+        this.target = this.buffer.readString(1).toLowerCase();
 
         // read the target platform
         switch (this.target) {

@@ -13,7 +13,7 @@ class DoubleReader extends BaseReader {
      * @returns {Number}
      */
     read(buffer) {
-        return buffer.read(4).readDoubleLE();
+        return buffer.readDouble();
     }
 }
 

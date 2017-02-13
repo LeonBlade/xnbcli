@@ -3,6 +3,9 @@ const Log = require('./Log');
 const XnbError = require('./XnbError');
 const chalk = require('chalk');
 
+const LITTLE_ENDIAN = 0;
+const BIG_ENDIAN = 1;
+
 class BufferReader {
 
     /**
@@ -10,10 +13,17 @@ class BufferReader {
      * @constructor
      * @param {String} filename The filename to read with the reader.
      */
-    constructor(filename) {
+    constructor(filename, endianus = LITTLE_ENDIAN) {
         // ensure the file exists
         if (!fs.existsSync(filename))
             throw new XnbError(`"${filename}" does not exist!`);
+
+        /**
+         * Sets the endianness of the buffer stream
+         * @private
+         * @type {Number}
+         */
+        this._endianus = endianus;
 
         /**
          * internal buffer for the reader
@@ -169,6 +179,98 @@ class BufferReader {
     }
 
     /**
+     * Reads a single byte returned as a uint8
+     * @public
+     * @returns {Number}
+     */
+    readByte() {
+        return this.read(1).readUInt8();
+    }
+
+    /**
+     * Reads a uint16
+     * @public
+     * @returns {Number}
+     */
+    readUInt16() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.read(2).readUInt16LE();
+        return this.read(2).readUInt16BE();
+    }
+
+    /**
+     * Reads a uint32
+     * @public
+     * @returns {Number}
+     */
+    readUInt32() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.read(4).readUInt32LE();
+        return this.read(4).readUInt32BE();
+    }
+
+    /**
+     * Reads an int16
+     * @public
+     * @returns {Number}
+     */
+    readInt16() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.readInt16();
+        return this.read(2).readInt16BE();
+    }
+
+    /**
+     * Reads an int32
+     * @public
+     * @returns {Number}
+     */
+    readInt32() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.readInt32();
+        return this.read(4).readInt32BE();
+    }
+
+    /**
+     * Reads a float
+     * @public
+     * @returns {Number}
+     */
+    readSingle() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.read(4).readFloatLE();
+        return this.read(4).readFloatBE();
+    }
+
+    /**
+     * Reads a double
+     * @public
+     * @returns {Number}
+     */
+    readDouble() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.read(4).readDoubleBE();
+        return this.read(4).readDoubleBE();
+    }
+
+    /**
+     * Reads a string
+     * @public
+     * @param {Number} [count]
+     * @returns {String}
+     */
+    readString(count = 0) {
+        if (count === 0) {
+            const chars = [];
+            while (this.peekByte(1) != 0x0)
+                chars.push(this.readString(1));
+            this.seek(1);
+            return str.join('');
+        }
+        return this.read(count).toString();
+    }
+
+    /**
      * Peeks ahead in the buffer without actually seeking ahead.
      * @public
      * @method peek
@@ -185,6 +287,99 @@ class BufferReader {
     }
 
     /**
+     * Peeks a single byte returned as a uint8
+     * @public
+     * @returns {Number}
+     */
+    peekByte() {
+        return this.peek(1).readUInt8();
+    }
+
+    /**
+     * Peeks a uint16
+     * @public
+     * @returns {Number}
+     */
+    peekUInt16() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.peek(2).readUInt16LE();
+        return this.peek(2).readUInt16BE();
+    }
+
+    /**
+     * Peeks a uint32
+     * @public
+     * @returns {Number}
+     */
+    peekUInt32() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.peek(4).readUInt32LE();
+        return this.peek(4).readUInt32BE();
+    }
+
+    /**
+     * Peeks an int16
+     * @public
+     * @returns {Number}
+     */
+    peekInt16() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.peek(2).readInt16LE();
+        return this.peek(2).readInt16BE();
+    }
+
+    /**
+     * Peeks an int32
+     * @public
+     * @returns {Number}
+     */
+    peekInt32() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.peek(4).readInt32LE();
+        return this.peek(4).readInt32BE();
+    }
+
+    /**
+     * Peeks a float
+     * @public
+     * @returns {Number}
+     */
+    peekSingle() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.peek(4).readFloatLE();
+        return this.peek(4).readFloatBE();
+    }
+
+    /**
+     * Peeks a double
+     * @public
+     * @returns {Number}
+     */
+    peekDouble() {
+        if (this._endianus == LITTLE_ENDIAN)
+            return this.peek(4).readDoubleLE();
+        return this.peek(4).readDoubleBE();
+    }
+
+    /**
+     * Peeks a string
+     * @public
+     * @param {Number} [count]
+     * @returns {String}
+     */
+    peekString(count = 0) {
+        if (count === 0) {
+            const bytePosition = this.bytePosition;
+            const chars = [];
+            while (this.peekByte(1) != 0x0)
+                chars.push(this.readString(1));
+            this.bytePosition = bytePosition;
+            return str.join('');
+        }
+        return this.peek(count).toString();
+    }
+
+    /**
      * Reads a 7-bit number.
      * @public
      * @method read7BitNumber
@@ -197,7 +392,7 @@ class BufferReader {
 
         // loop over bits
         do {
-            value = this.read(1).readUInt8();
+            value = this.readByte();
             result |= (value & 0x7F) << bitsRead;
             bitsRead += 7;
         }
@@ -286,8 +481,8 @@ class BufferReader {
      */
     readLZXInt16(seek = true) {
         // read in the next two bytes worth of data
-        const lsB = this.read(1).readUInt8();
-        const msB = this.read(1).readUInt8();
+        const lsB = this.readByte();
+        const msB = this.readByte();
 
         // rewind the seek head
         if (!seek)

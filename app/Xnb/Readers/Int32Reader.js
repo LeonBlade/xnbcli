@@ -13,7 +13,7 @@ class Int32Reader extends BaseReader {
      * @returns {Number}
      */
     read(buffer) {
-        return buffer.read(4).readInt32LE();
+        return buffer.readInt32();
     }
 }
 

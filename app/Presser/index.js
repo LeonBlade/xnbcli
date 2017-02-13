@@ -37,7 +37,7 @@ class Presser {
         // loop over the bytes left
         while (pos < compressedTodo) {
             // flag is for determining if frame_size is fixed or not
-            const flag = buffer.read(1).readUInt8();
+            const flag = buffer.readByte();
 
             // if flag is set to 0xFF that means we will read in frame size
             if (flag == 0xFF) {
