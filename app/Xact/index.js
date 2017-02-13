@@ -6,9 +6,6 @@ const AudioEngine = require('./AudioEngine');
 const SoundBank = require('./SoundBank');
 const WaveBank = require('./WaveBank');
 
-// SoundBank Constants
-const SDBK_FORMAT_VERSION = 0x2B;
-
 // WaveBank Constants
 const WBND_ENTRY_NAMES = 0x00010000; // bank includes entry names
 const WBND_COMPACT = 0x00020000; // bank uses compact format
@@ -42,87 +39,12 @@ class Xact {
                 // load the audio engine file
                 audioEngine.load(filename);
                 break;
+            case 'xsb':
+                SoundBank.load(filename);
+                break;
             default:
                 throw new XnbError(`Invalid file!`);
         }
-    }
-
-    /**
-     * Processes the SoundBank file
-     * @param {BufferReader} buffer
-     */
-    processSoundBank(buffer) {
-        // get the tool version
-        const toolVersion = buffer.read(2).readUInt16LE();
-        Log.debug(`Tool Version: ${Log.h(toolVersion)}`);
-        // get the format verion
-        const formatVersion = buffer.read(2).readUInt16LE();
-        Log.debug(`Format Version: ${Log.h(formatVersion)}`);
-        if (formatVersion != SDBK_FORMAT_VERSION)
-            Log.warn(`SoundBank format ${formatVersion} not supported.`);
-
-        // fcs16 checksum for following data
-        // NOTE: giving zero fucks about CRC just like XNA does
-        const crc = buffer.read(2).readUInt16LE();
-        Log.debug(`CRC: ${Log.h(crc)}`);
-        // last modified high and low
-        const lastModifiedLow = buffer.read(4).readUInt32LE();
-        const lastModifiedHigh = buffer.read(4).readUInt32LE();
-        Log.debug(`LML: ${lastModifiedLow}, LMH: ${lastModifiedHigh}`);
-        // platform
-        const platform = buffer.read(1).readUInt8();
-        Log.debug(`Platform: ${Log.h(platform)}`);
-        // number of simple cueues
-        const numSimpleCues = buffer.read(2).readUInt16LE();
-        const numComplexCues = buffer.read(2).readUInt16LE();
-        Log.debug(`Simple: ${numSimpleCues}, Complex: ${numComplexCues}`)
-        // unknown
-        const unkn = buffer.read(2).readUInt16LE();
-        Log.debug(`Unknown: ${Log.h(unkn)}`);
-        // number of total cues
-        const numTotalCues = buffer.read(2).readUInt16LE();
-        Log.debug(`Total Cues: ${numTotalCues}`);
-        // number of wave banks
-        const numWaveBanks = buffer.read(1).readUInt8();
-        Log.debug(`Wave Banks: ${numWaveBanks}`);
-        // cue name table length
-        const cueNameTableLen = buffer.read(4).readUInt32LE();
-        Log.debug(`Cue Name Table Length: ${cueNameTableLen}`);
-
-        // simple cues offset
-        const simpleCuesOffset = buffer.read(4).readUInt32LE();
-        Log.debug(`Simple Cues Offset: ${simpleCuesOffset}`);
-        // complex cues offset
-        const complexCuesOffset = buffer.read(4).readUInt32LE();
-        Log.debug(`Complex Cues Offset: ${complexCuesOffset}`);
-        // cue names offset
-        const cueNamesOffset = buffer.read(4).readUInt32LE();
-        Log.debug(`Cue Names Offset: ${cueNamesOffset}`);
-        // unknown offset
-        const unknOffset = buffer.read(4).readUInt32LE();
-        Log.debug(`Unknown Offset: ${unknOffset}`);
-        // variation table offset
-        const variationTableOffset = buffer.read(4).readUInt32LE();
-        Log.debug(`Variation Table Offset: ${variationTableOffset}`);
-        // wave bank name table offset
-        const waveBankNameTableOffset = buffer.read(4).readUInt32LE();
-        Log.debug(`Wave Bank Name Table Offset: ${waveBankNameTableOffset}`);
-        // cue name hash table offset
-        const cueNameHashTableOffset = buffer.read(4).readUInt32LE();
-        Log.debug(`Cue Name Hash Table Offset: ${cueNameHashTableOffset}`);
-        // cue name hash values offset
-        const cueNameHashValsOffset = buffer.read(4).readUInt32LE();
-        Log.debug(`Cue Name Hash Values Offset: ${cueNameHashValsOffset}`);
-
-        // parse wave bank name table
-        buffer.seek(waveBankNameTableOffset, 0);
-        // new wave banks
-        const waveBanks = new Array(numWaveBanks);
-        const waveBankNames = new Array(numWaveBanks);
-        for (let i = 0; i < numWaveBanks; i++)
-            waveBankNames.push(buffer.read(64).toString().replace('\0', ''));
-
-        Log.debug(waveBankNames);
     }
 
     /**
@@ -136,7 +58,7 @@ class Xact {
 
         let wavebank_offset = 0;
 
-        waveBankHeader.version = buffer.read(4).readUInt32LE();
+        waveBankHeader.version = buffer.readUInt32();
         Log.debug(`Version: ${waveBankHeader.version}`);
 
         let last_segment = 4;
@@ -146,8 +68,8 @@ class Xact {
         waveBankHeader.segments = new Array(5);
         for (let i = 0; i <= last_segment; i++) {
             waveBankHeader.segments[i] = new Segment();
-            waveBankHeader.segments[i].offset = buffer.read(4).readInt32LE();
-            waveBankHeader.segments[i].length = buffer.read(4).readInt32LE();
+            waveBankHeader.segments[i].offset = buffer.readInt32();
+            waveBankHeader.segments[i].length = buffer.readInt32();
         }
 
         Log.debug(JSON.stringify(waveBankHeader.segments));
@@ -156,9 +78,9 @@ class Xact {
 
         // data
 
-        waveBankData.flags = buffer.read(4).readInt32LE();
+        waveBankData.flags = buffer.readInt32();
         Log.debug(`Flags: ${Log.h(waveBankData.flags)}`);
-        waveBankData.entryCount = buffer.read(4).readInt32LE();
+        waveBankData.entryCount = buffer.readInt32();
         Log.debug(`Entry Count: ${waveBankData.entryCount}`);
 
         if (waveBankHeader.version == 2 || waveBankHeader.version == 3)
@@ -173,9 +95,9 @@ class Xact {
         if (waveBankHeader.version == 1)
             waveBankData.entryMetaDataElementSize = 20;
         else {
-            waveBankData.entryMetaDataElementSize = buffer.read(4).readInt32LE();
-            waveBankData.entryNameElementSize = buffer.read(4).readInt32LE();
-            waveBankData.alignment = buffer.read(4).readInt32LE();
+            waveBankData.entryMetaDataElementSize = buffer.readInt32();
+            waveBankData.entryNameElementSize = buffer.readInt32();
+            waveBankData.alignment = buffer.readInt32();
             wavebank_offset = waveBankHeader.segments[1].offset; // metadatasegment
         }
 
@@ -205,7 +127,7 @@ class Xact {
             waveBankEntry.loopRegionOffset = 0;
 
             if ((waveBankData.flags & WBND_COMPACT) != 0) {
-                let len = buffer.read(4).readInt32LE();
+                let len = buffer.readInt32();
                 waveBankEntry.format = waveBankData.compactFormat;
                 waveBankEntry.playRegion.offset = (len & ((1 << 21) - 1)) * waveBankData.alignment;
                 waveBankEntry.playRegion.length = (len >> 21) & ((1 << 11) - 1);
@@ -215,36 +137,36 @@ class Xact {
                 if (current_entry == (waveBankEntry.entryCount - 1))
                     len = waveBankHeader.segments[last_segment].length;
                 else
-                    len = ((buffer.read(4).readInt32LE() & ((1 << 21) - 1)) * waveBankEntry.alignment);
+                    len = ((buffer.readInt32() & ((1 << 21) - 1)) * waveBankEntry.alignment);
 
                 length = len - offset;
             }
             else {
                 if (waveBankHeader.version == 1) {
-                    waveBankEntry.format = buffer.read(4).readInt32LE();
-                    waveBankEntry.playRegion.offset = buffer.read(4).readInt32LE();
-                    waveBankEntry.playRegion.length = buffer.read(4).readInt32LE();
-                    waveBankEntry.loopRegion.offset = buffer.read(4).readInt32LE();
-                    waveBankEntry.loopRegion.offset = buffer.read(4).readInt32LE();
+                    waveBankEntry.format = buffer.readInt32();
+                    waveBankEntry.playRegion.offset = buffer.readInt32();
+                    waveBankEntry.playRegion.length = buffer.readInt32();
+                    waveBankEntry.loopRegion.offset = buffer.readInt32();
+                    waveBankEntry.loopRegion.offset = buffer.readInt32();
                 }
                 else {
                     if (waveBankData.entryMetaDataElementSize >= 4)
-                        waveBankEntry.flagsAndDuration = buffer.read(4).readInt32LE();
+                        waveBankEntry.flagsAndDuration = buffer.readInt32();
 
                     if (waveBankData.entryMetaDataElementSize >= 8)
-                        waveBankEntry.format = buffer.read(4).readInt32LE();
+                        waveBankEntry.format = buffer.readInt32();
 
                     if (waveBankData.entryMetaDataElementSize >= 12)
-                        waveBankEntry.playRegion.offset = buffer.read(4).readInt32LE();
+                        waveBankEntry.playRegion.offset = buffer.readInt32();
 
                     if (waveBankData.entryMetaDataElementSize >= 16)
-                        waveBankEntry.playRegion.length = buffer.read(4).readInt32LE();
+                        waveBankEntry.playRegion.length = buffer.readInt32();
 
                     if (waveBankData.entryMetaDataElementSize >= 20)
-                        waveBankEntry.loopRegion.offset = buffer.read(4).readInt32LE();
+                        waveBankEntry.loopRegion.offset = buffer.readInt32();
 
                     if (waveBankData.entryMetaDataElementSize >= 24)
-                        waveBankEntry.loopRegion.length = buffer.read(4).readInt32LE();
+                        waveBankEntry.loopRegion.length = buffer.readInt32();
                 }
 
                 if (waveBankData.entryMetaDataElementSize < 24)
