@@ -10,6 +10,7 @@ const Struct = obj => {
                 if (!target.hasOwnProperty(key))
                     throw new TypeError(`Invalid property ${key}`);
                 target[key] = value;
+                return true;
             }
         });
     };
