@@ -204,7 +204,7 @@ class Xnb {
         }
 
         // read the format version
-        this.formatVersion = this.buffer.read(1).readInt8();
+        this.formatVersion = this.buffer.readByte();
 
         // read the XNB format version
         switch (this.formatVersion) {
@@ -218,12 +218,12 @@ class Xnb {
                 Log.debug('XNB Format Version: XNA Game Studio 4.0');
                 break;
             default:
-                Log.warn(`XNB Format Version 0x${this.formatVersion.toString('hex')} unknown.`);
+                Log.warn(`XNB Format Version ${Log.h(this.formatVersion)} unknown.`);
                 break;
         }
 
         // read the flag bits
-        const flags = this.buffer.read(1).readInt8();
+        const flags = this.buffer.readByte(1);
         // get the HiDef flag
         this.hidef = (flags & HIDEF_MASK) != 0;
         // get the compressed flag

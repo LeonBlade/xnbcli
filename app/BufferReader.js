@@ -193,9 +193,10 @@ class BufferReader {
      * @returns {Number}
      */
     readUInt16() {
+        const read = this.read(2);
         if (this._endianus == LITTLE_ENDIAN)
-            return this.read(2).readUInt16LE();
-        return this.read(2).readUInt16BE();
+            return read.readUInt16LE();
+        return read.readUInt16BE();
     }
 
     /**
@@ -204,9 +205,10 @@ class BufferReader {
      * @returns {Number}
      */
     readUInt32() {
+        const read = this.read(4);
         if (this._endianus == LITTLE_ENDIAN)
-            return this.read(4).readUInt32LE();
-        return this.read(4).readUInt32BE();
+            return read.readUInt32LE();
+        return read.readUInt32BE();
     }
 
     /**
@@ -215,9 +217,10 @@ class BufferReader {
      * @returns {Number}
      */
     readInt16() {
+        const read = this.read(2);
         if (this._endianus == LITTLE_ENDIAN)
-            return this.readInt16();
-        return this.read(2).readInt16BE();
+            return read.readInt16LE();
+        return read.readInt16BE();
     }
 
     /**
@@ -226,9 +229,10 @@ class BufferReader {
      * @returns {Number}
      */
     readInt32() {
+        const read = this.read(4);
         if (this._endianus == LITTLE_ENDIAN)
-            return this.readInt32();
-        return this.read(4).readInt32BE();
+            return read.readInt16LE();
+        return read.readInt32BE();
     }
 
     /**
@@ -237,9 +241,10 @@ class BufferReader {
      * @returns {Number}
      */
     readSingle() {
+        const read = this.read(4);
         if (this._endianus == LITTLE_ENDIAN)
-            return this.read(4).readFloatLE();
-        return this.read(4).readFloatBE();
+            return read.readFloatLE();
+        return read.readFloatBE();
     }
 
     /**
@@ -248,9 +253,10 @@ class BufferReader {
      * @returns {Number}
      */
     readDouble() {
+        const read = this.read(4);
         if (this._endianus == LITTLE_ENDIAN)
-            return this.read(4).readDoubleBE();
-        return this.read(4).readDoubleBE();
+            return read.readDoubleLE();
+        return read.readDoubleBE();
     }
 
     /**
