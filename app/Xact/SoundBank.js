@@ -3,6 +3,8 @@ const BufferReader = require('../BufferReader');
 const XnbError = require('../XnbError');
 const Enum = require('../Enum');
 const Struct = require('../Struct');
+const XactSound = require('./XactSound');
+const chalk = require('chalk');
 
 // SoundBank Constants
 const SDBK_FORMAT_VERSION = 0x2B;
@@ -73,7 +75,7 @@ class SoundBank {
         buffer.seek(2);
 
         Log.debug(`Simple Cues: ${numSimpleCues}`);
-        Log.debug(`Complex: ${numComplexCues}`);
+        Log.debug(`Complex Cues: ${numComplexCues}`);
         Log.debug(`Total Cues: ${numTotalCues}`);
         Log.debug(`Wave Banks: ${numWaveBanks}`);
         Log.debug(`Sounds: ${numSounds}`);
@@ -83,7 +85,7 @@ class SoundBank {
         const complexCuesOffset = buffer.readUInt32();
         const cueNamesOffset = buffer.readUInt32();
         buffer.seek(4);
-        const variationTableOffset = buffer.readUInt32();
+        const variationTablesOffset = buffer.readUInt32();
         buffer.seek(4);
         const waveBankNameTableOffset = buffer.readUInt32();
         const cueNameHashTableOffset = buffer.readUInt32();
@@ -93,7 +95,7 @@ class SoundBank {
         Log.debug(`Simple Cues Offset: ${simpleCuesOffset}`);
         Log.debug(`Complex Cues Offset: ${complexCuesOffset}`);
         Log.debug(`Cue Names Offset: ${cueNamesOffset}`);
-        Log.debug(`Variation Table Offset: ${variationTableOffset}`);
+        Log.debug(`Variation Table Offset: ${variationTablesOffset}`);
         Log.debug(`Wave Bank Name Table Offset: ${waveBankNameTableOffset}`);
         Log.debug(`Cue Name Hash Table Offset: ${cueNameHashTableOffset}`);
         Log.debug(`Cue Name Hash Values Offset: ${cueNameHashValsOffset}`);
@@ -120,6 +122,77 @@ class SoundBank {
             const soundOffset = buffer.readUInt32();
         }
         Log.debug(`Cues: ${cueNames}`);
+
+        let totalCueCount = 0;
+
+        buffer.seek(complexCuesOffset, 0);
+        for (let i = 0; i < numComplexCues; i++) {
+            const flags = buffer.readByte();
+
+            let cue;
+
+            Log.debug();
+
+            if (((flags >> 2) & 1) != 0) {
+                // not sure :/
+                const soundOffset = buffer.readUInt32();
+                buffer.seek(4);
+
+                Log.debug(`Found ${chalk.bold.green(cueNames[numSimpleCues+i])}`);
+                const sound = new XactSound(buffer, soundOffset);
+                totalCueCount++;
+            }
+            else {
+                const variationTableOffset = buffer.readUInt32();
+                const transitionTableOffset = buffer.readUInt32();
+
+                const savepos = buffer.bytePosition;
+                // parse variation table
+                buffer.seek(variationTableOffset, 0);
+
+                const numEntries = buffer.readUInt16();
+                const variationFlags = buffer.readUInt16();
+                buffer.seek(4);
+
+                const cueSounds = new Array(numEntries);
+                Log.debug(`Found ${chalk.bold.yellow(numEntries)} cues for ${chalk.bold.green(cueNames[numSimpleCues+i])}`);
+
+                const tableType = (variationFlags >> 3) & 0x7;
+                for (let j = 0; j < numEntries; j++) {
+                    switch (tableType) {
+                        case 0: { // Wave
+                            const trackIndex = buffer.readUInt16();
+                            const waveBankIndex = buffer.readByte();
+                            const weightMin = buffer.readByte();
+                            const weightMax = buffer.readByte();
+                            Log.debug(chalk.inverse(`WaveBank Index: ${waveBankIndex}`));
+                            break;
+                        }
+                        case 1: {
+                            const soundOffset = buffer.readUInt32();
+                            const weightMin = buffer.readByte();
+                            const weightMax = buffer.readByte();
+                            cueSounds[j] = new XactSound(buffer, soundOffset);
+                            totalCueCount++;
+                            break;
+                        }
+                        case 4: { // CompactWave
+                            const trackIndex = buffer.readUInt16();
+                            const waveBankIndex = buffer.readByte();
+                            Log.debug(chalk.inverse(`WaveBank Index: ${waveBankIndex}`));
+                            break;
+                        }
+                        default:
+                            throw new Error('Table type not implemented');
+                    }
+                }
+                buffer.seek(savepos, 0);
+            }
+
+            // instance limit
+            buffer.seek(6);
+        }
+        Log.debug(`Found ${chalk.bold.red(totalCueCount)} cues!`);
     }
 }
 
