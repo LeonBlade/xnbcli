@@ -63,6 +63,8 @@ class BufferReader {
     seek(index, origin = this._offset) {
         const offset = this._offset;
         this._offset = Math.max(origin + Number.parseInt(index), 0);
+        if (this._offset < 0 || this._offset > this.buffer.length)
+            throw new XnbError(`Buffer seek out of bounds!`);
         return this._offset - offset;
     }
 
@@ -571,7 +573,8 @@ class BufferReader {
         const ldlpos = diff - (bytePosition - this._lastDebugLoc);
         // replace the selected byte with brackets
         bytes[diff] = chalk.black.bgBlue(bytes[diff]);
-        bytes[ldlpos] = chalk.black.bgMagenta(bytes[ldlpos]);
+        if (ldlpos > 0 && ldlpos < 16)
+            bytes[ldlpos] = chalk.black.bgMagenta(bytes[ldlpos]);
 
         // log the message
         console.log(bytes.join(' '));
