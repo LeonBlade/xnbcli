@@ -202,7 +202,12 @@ class Lzx {
                         );
                         break;
                     case BLOCKTYPE.UNCOMPRESSED:
-                        throw new XnbError('Blocktype Uncompressed not implemented.');
+                        // align the bit buffer to byte range
+                        buffer.align();
+                        // read the offsets
+                        this.R0 = buffer.readInt32();
+                        this.R1 = buffer.readInt32();
+                        this.R2 = buffer.readInt32();
                         break;
                     default:
                         throw new XnbError(`Invalid Blocktype Found: ${this.block_type}`);
@@ -444,7 +449,13 @@ class Lzx {
                         break;
 
                     case BLOCKTYPE.UNCOMPRESSED:
-                        throw new XnbError('Uncompressed blocktype not supported!');
+                        if ((buffer.bytePosition + this_run) > block_size)
+                            throw new XnbError('Overrun!' + block_size + ' ' + buffer.bytePosition + ' ' + this_run);
+                        for (let i = 0; i < this_run; i++)
+                            this.win[window_posn + i] = buffer.buffer[buffer.bytePosition + i];
+                        buffer.bytePosition += this_run;
+                        this.window_posn += this_run;
+                        break;
 
                     default:
                         throw new XnbError('Invalid blocktype specified!');

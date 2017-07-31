@@ -291,7 +291,7 @@ class BufferReader {
             while (this.peekByte(1) != 0x0)
                 chars.push(this.readString(1));
             this.seek(1);
-            return str.join('');
+            return chars.join('');
         }
         return this.read(count).toString();
     }
