@@ -38,8 +38,8 @@ program
         processUnpack(input, output);
 
         // give a final analysis of the files
-        //console.log(`${chalk.bold.green('Success')} ${success}`);
-        //console.log(`${chalk.bold.red('Fail')} ${fail}`);
+        console.log(`${chalk.bold.green('Success')} ${success}`);
+        console.log(`${chalk.bold.red('Fail')} ${fail}`);
     });
 
 // XNB pack Command
@@ -47,7 +47,8 @@ program
     .command('pack <input> [output]')
     .description('Used to pack XNB files.')
     .action((input, output) => {
-        // TODO: add functionality to pack XNB files
+        // process the pack
+        processPack(input, output);
     });
 
 // default action
@@ -63,6 +64,7 @@ if (!process.argv.slice(2).length)
 /**
  * Takes input and processes input for unpacking.
  * @param {String} input
+ * @param {String} output
  */
 function processUnpack(input, output) {
     // get stats for the input
@@ -123,6 +125,38 @@ function processUnpack(input, output) {
         catch (ex) {
             // log out the error
             Log.error(`Filename: ${path.basename(input)}\n${ex.stack}\n`);
+        }
+    }
+}
+
+/**
+ * Process the pack of files to xnb
+ * @param {String} input 
+ * @param {String} output 
+ */
+function processPack(input, output) {
+    // get stats for the input
+    const stats = fs.statSync(input);
+    // get the extension
+    const ext = path.extname(input).toLocaleLowerCase();
+    // check if input is a directory
+    if (stats.isDirectory())
+        for (let dir of fs.readdirSync(input))
+            processPack(path.resolve(input, dir), path.resolve(output, path.basename(input), path.dirname(dir)));
+    else if (ext == ".json") {
+        // catch exceptions to not quit in a batch of files
+        try {
+            // create instance of xnb
+            const xnb = new Xnb();
+
+            // increase success count
+            success++;
+        }
+        catch (ex) {
+            // log out the error
+            Log.error(`Filename: ${input}\n${ex.stack}\n`);
+            // increase fail count
+            fail++;
         }
     }
 }

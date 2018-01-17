@@ -55,6 +55,10 @@ class Texture2DReader extends BaseReader {
         };
     }
 
+    write(data) {
+
+    }
+
     isValueType() {
         return false;
     }

@@ -6,6 +6,7 @@ const { simplifyType, getReader } = require('./TypeReader');
 const { StringReader } = require('./Readers');
 const ReaderResolver = require('./ReaderResolver');
 const Presser = require('../Presser');
+const fs = require('fs');
 
 // "constants" for this class
 const HIDEF_MASK = 0x1;
@@ -38,8 +39,8 @@ class Xnb {
         this.fileSize = 0;
 
         /**
-         * Array of TypeReaders that are used by the XNB file.
-         * @type {TypeReader[]}
+         * Array of readers that are used by the XNB file.
+         * @type {BaseReader[]}
          */
         this.readers = [];
 
@@ -96,6 +97,8 @@ class Xnb {
 
         Log.debug(`Reading from byte position: ${this.buffer.bytePosition}`);
 
+        fs.writeFileSync("/mnt/y/Users/LeonBlade/Desktop/test.xnb", this.buffer.buffer);
+
         // NOTE: assuming the buffer is now decompressed
 
         // get the 7-bit value for readers
@@ -138,7 +141,7 @@ class Xnb {
 
         // create content reader from the readers loaded
         const content = new ReaderResolver(this.readers);
-        // read the content
+        // read the content in
         const result = content.read(this.buffer);
 
         // we loaded the XNB file successfully
@@ -158,11 +161,48 @@ class Xnb {
     }
 
     /**
-     * Saves the current buffer to an XNB file.
-     * @param {String} path The destination for the XNB file.
+     * Converts JSON into XNB file structure
+     * @param {String} filename The path to load the JSON file from
      */
-    save(path) {
-        // TODO: implement saving
+    convert(filename) {
+        Log.info(`Parsing file "${filename}" ...`);
+
+        // read the JSON file
+        const file = fs.readFileSync(filename);
+        // parse the JSON contents
+        const json = JSON.parse(file);
+        // the output buffer for this file
+        const buffer = new Buffer();
+
+        // catch exceptions for invalid JSON file formats
+        try {
+            // set the header information
+            this.target = json.header.target;
+            this.formatVersion = json.header.formatVersion;
+            this.hidef = json.header.hidef;
+            this.compressed = false; // NOTE: file compression not supported
+
+            Log.debug('Compression flag ignored as compression is not supported.');
+
+            // write the header into the buffer
+            buffer.write("XNB");
+            buffer.writeUInt8(this.formatVersion);
+            // NOTE: can write hidef flag as 0 or 1 as there's no compression allowed
+            buffer.writeUInt8(this.hidef);
+
+
+            // write temporary filesize
+            buffer.writeUInt32LE(0);
+
+            // loop over the readers and load the types
+            for (let reader in json.readers)
+                this.readers.push(getReader(simplifyType(reader.type))); // simplyify the type then get the reader of it
+            
+
+        }
+        catch (ex) {
+            throw new XnbError(`Invalid JSON file.`);
+        }
     }
 
     /**
