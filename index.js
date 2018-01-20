@@ -149,6 +149,8 @@ function processPack(input, output) {
             // create instance of xnb
             const xnb = new Xnb();
 
+            xnb.convert(input);
+
             // increase success count
             success++;
         }

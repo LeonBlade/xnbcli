@@ -1,4 +1,5 @@
 const BufferReader = require('../BufferReader');
+const BufferWriter = require('../BufferWriter');
 const Log = require('../Log');
 const XnbError = require('../XnbError');
 
@@ -97,8 +98,6 @@ class Xnb {
 
         Log.debug(`Reading from byte position: ${this.buffer.bytePosition}`);
 
-        fs.writeFileSync("/mnt/y/Users/LeonBlade/Desktop/test.xnb", this.buffer.buffer);
-
         // NOTE: assuming the buffer is now decompressed
 
         // get the 7-bit value for readers
@@ -171,8 +170,11 @@ class Xnb {
         const file = fs.readFileSync(filename);
         // parse the JSON contents
         const json = JSON.parse(file);
-        // the output buffer for this file
-        const buffer = new Buffer();
+        // the output buffer for this file idk 500 bytes lol
+        const buffer = new BufferWriter();
+
+        // create an instance of string reader
+        const stringReader = new StringReader();
 
         // catch exceptions for invalid JSON file formats
         try {
@@ -186,22 +188,45 @@ class Xnb {
 
             // write the header into the buffer
             buffer.write("XNB");
-            buffer.writeUInt8(this.formatVersion);
+            buffer.write(this.target);
+            buffer.writeByte(this.formatVersion);
             // NOTE: can write hidef flag as 0 or 1 as there's no compression allowed
-            buffer.writeUInt8(this.hidef);
-
+            buffer.writeByte(this.hidef);
 
             // write temporary filesize
-            buffer.writeUInt32LE(0);
+            buffer.writeUInt32(0);
+
+            // write the amount of readers
+            buffer.write7BitNumber(json.readers.length);
 
             // loop over the readers and load the types
-            for (let reader in json.readers)
+            for (let reader of json.readers) {
                 this.readers.push(getReader(simplifyType(reader.type))); // simplyify the type then get the reader of it
-            
+                stringReader.write(buffer, reader.type);
+                buffer.writeUInt32(reader.version);
+            }
+
+            // write 0 shared resources
+            buffer.write7BitNumber(0);
+
+            // create reader resolver for content and write it
+            const content = new ReaderResolver(this.readers);
+
+            // write the content to the reader resolver
+            content.write(buffer, json.content);
+
+            // trim excess space in the buffer
+            buffer.trim();
+
+            // write the file size into the buffer
+            buffer.buffer.writeUInt32LE(buffer.bytePosition, 6)
+
+            // return the buffer
+            return buffer.buffer;
 
         }
         catch (ex) {
-            throw new XnbError(`Invalid JSON file.`);
+            throw new XnbError(ex);
         }
     }
 
