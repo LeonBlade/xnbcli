@@ -1,4 +1,7 @@
 const XnbError = require('../../XnbError');
+const BufferReader = require('../../BufferReader');
+const BufferWriter = require('../../BufferWriter');
+const ReaderResolver = require('../ReaderResolver');
 
 /**
  * Base class for all readers.
@@ -35,6 +38,26 @@ class BaseReader {
      */
     read(buffer, resolver) {
         throw new XnbError('Cannot invoke methods on abstract class.');
+    }
+
+    /**
+     * Writes Dictionary into buffer
+     * @param {BufferWriter} buffer
+     * @param {Object} data The data to parse for the 
+     * @param {ReaderResolver} resolver ReaderResolver to write non-primitive types
+     */
+    write(buffer, content, resolver) {
+        throw new XnbError('Cannot invoke methods on abstract class.');
+    }
+
+    /**
+     * Writes the index of this reader to the buffer
+     * @param {BufferWriter} buffer
+     * @param {ReaderResolver} resolver 
+     */
+    writeIndex(buffer, resolver) {
+        if (resolver != null)
+            buffer.write7BitNumber(Number.parseInt(resolver.getIndex(this)) + 1);
     }
 
     /**
