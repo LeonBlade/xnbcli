@@ -51,6 +51,8 @@ class Texture2DReader extends BaseReader {
 
         return {
             format,
+            width,
+            height,
             export: { type: this.type, data }
         };
     }
