@@ -59,6 +59,11 @@ const exportFile = (filename, xnbObject) => {
                     foundContent.height,
                     exported.data
                 );
+                
+                // delete width and height from the export
+                delete foundContent.width;
+                delete foundContent.height;
+
                 extension = 'png';
                 break;
 
