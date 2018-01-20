@@ -1,5 +1,6 @@
 const BaseReader = require('./BaseReader');
 const BufferReader = require('../../BufferReader');
+const BufferWriter = require('../../BufferWriter');
 const ReaderResolver = require('../ReaderResolver');
 const UInt32Reader = require('./UInt32Reader');
 
@@ -57,6 +58,29 @@ class DictionaryReader extends BaseReader {
 
         // return the dictionary object
         return dictionary;
+    }
+
+    /**
+     * Writes Dictionary into buffer
+     * @param {BufferWriter} buffer
+     * @param {Object} data The data to parse for the 
+     * @param {ReaderResolver} resolver ReaderResolver to write non-primitive types
+     * @returns {Buffer} buffer instance with the data in it
+     */
+    write(buffer, content, resolver) {
+        // write the index
+        this.writeIndex(buffer, resolver);
+
+        // write the amount of entries in the Dictionary
+        buffer.writeUInt32(Object.keys(content).length);
+
+        // loop over the entries
+        for (let key in content) {
+            // write the key
+            this.key.write(buffer, key, (this.key.isValueType() ? null : resolver));
+            // write the value
+            this.value.write(buffer, content[key], (this.value.isValueType() ? null : resolver));
+        }
     }
 
     isValueType() {
