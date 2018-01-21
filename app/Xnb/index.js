@@ -7,7 +7,7 @@ const { simplifyType, getReader } = require('./TypeReader');
 const { StringReader } = require('./Readers');
 const ReaderResolver = require('./ReaderResolver');
 const Presser = require('../Presser');
-const fs = require('fs');
+const { resolveImport } = require('../Porter');
 
 // "constants" for this class
 const HIDEF_MASK = 0x1;
@@ -161,15 +161,9 @@ class Xnb {
 
     /**
      * Converts JSON into XNB file structure
-     * @param {String} filename The path to load the JSON file from
+     * @param {Object} json The JSON to convert into a XNB file
      */
-    convert(filename) {
-        Log.info(`Parsing file "${filename}" ...`);
-
-        // read the JSON file
-        const file = fs.readFileSync(filename);
-        // parse the JSON contents
-        const json = JSON.parse(file);
+    convert(json) {
         // the output buffer for this file idk 500 bytes lol
         const buffer = new BufferWriter();
 
@@ -226,7 +220,7 @@ class Xnb {
 
         }
         catch (ex) {
-            throw new XnbError(ex);
+            console.log(ex);
         }
     }
 

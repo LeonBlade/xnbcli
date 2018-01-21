@@ -1,11 +1,8 @@
 {
   "name": "xnbcli",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "XNB CLI tool for packing and unpacking XNB files.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [
     "xnb"
   ],
@@ -16,6 +13,6 @@
     "commander": "^2.9.0",
     "dxt": "^1.0.0",
     "mkdirp": "^0.5.1",
-    "pngjs": "^3.0.0"
+    "pngjs": "^2.2.0"
   }
 }

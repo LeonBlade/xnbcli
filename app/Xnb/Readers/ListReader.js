@@ -23,14 +23,28 @@ class ListReader extends BaseReader {
      */
     read(buffer, resolver) {
         const uint32Reader = new UInt32Reader();
-        let size = uint32Reader.read(buffer);
+        const size = uint32Reader.read(buffer);
 
-        let list = [];
+        const list = [];
         for (let i = 0; i < size; i++) {
-            let value = this.reader.isValueType() ? this.reader.read(buffer) : resolver.read(buffer);
+            const value = this.reader.isValueType() ? this.reader.read(buffer) : resolver.read(buffer);
             list.push(value);
         }
         return list;
+    }
+
+    /**
+     * Writes List into the buffer
+     * @param {BufferWriter} buffer
+     * @param {Mixed} data The data
+     * @param {ReaderResolver} resolver
+     */
+    write(buffer, content, resolver) {
+        this.writeIndex(buffer, resolver);
+        const uint32Reader = new UInt32Reader();
+        uint32Reader.write(buffer, content.length, null);
+        for (let i in content)
+            this.reader.write(buffer, content[i], (this.reader.isValueType ? null : resolver));
     }
 
     get type() {

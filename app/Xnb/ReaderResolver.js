@@ -52,7 +52,7 @@ class ReaderResolver {
      */
     getIndex(reader) {
         for (let i in this.readers)
-            if (reader.constructor == this.readers[i].constructor)
+            if (reader.toString() == this.readers[i].toString())
                 return i;
     }
 }

@@ -17,6 +17,7 @@ class BufferWriter {
         return this._buffer;
     }
 
+    // trim the buffer to the byte position
     trim() {
         const tBuffer = Buffer.alloc(Number.parseInt(this.bytePosition));
         this._buffer.copy(tBuffer, 0, 0, this.bytePosition);
@@ -36,16 +37,106 @@ class BufferWriter {
         return this;
     }
 
+    concat(buffer) {
+        this.trim();
+        this._buffer = Buffer.concat([this._buffer, buffer]);
+        this.bytePosition += buffer.length;
+    }
+
+    /**
+     * Writes bytes to the buffer
+     * @param {Mixed} bytes 
+     */
     write(bytes) {
         this.alloc(bytes.length).buffer.write(bytes, this.bytePosition);
         this.bytePosition += bytes.length;
     }
 
+    /**
+     * Write a byte to the buffer
+     * @param {Mixed} byte 
+     */
     writeByte(byte) {
         this.alloc(1).buffer.writeUInt8(byte, this.bytePosition);
         this.bytePosition++;
     }
 
+    /**
+     * Write an int8 to the buffer
+     * @param {Number} number 
+     */
+    writeInt(number) {
+        this.alloc(1).buffer.writeInt8(byte, this.bytePosition);
+        this.bytePosition++;
+    }
+
+    /**
+     * Write a uint8 to the buffer
+     * @param {Number} number 
+     */
+    writeUInt(number) {
+        this.alloc(1).buffer.writeUInt8(byte, this.bytePosition);
+        this.bytePosition++;
+    }
+
+    /**
+     * Write a int16 to the buffer
+     * @param {Number} number 
+     */
+    writeInt16(number) {
+        this.alloc(2).buffer.writeInt16(byte, this.bytePosition);
+        this.bytePosition += 2;
+    }
+
+    /**
+     * Write a uint16 to the buffer
+     * @param {Number} number 
+     */
+    writeUInt16(number) {
+        this.alloc(2).buffer.writeUInt16(byte, this.bytePosition);
+        this.bytePosition += 2;
+    }
+
+    /**
+     * Write a int32 to the buffer
+     * @param {Number} number 
+     */
+    writeInt32(number) {
+        this.alloc(4).buffer.writeInt32LE(number, this.bytePosition);
+        this.bytePosition += 4;
+    }
+
+    /**
+     * Write a uint32 to the buffer
+     * @param {Number} number 
+     */
+    writeUInt32(number) {
+        this.alloc(4).buffer.writeUInt32LE(number, this.bytePosition);
+        this.bytePosition += 4;
+    }
+
+    /**
+     * Write a float to the buffer
+     * @param {Number} number 
+     */
+    writeSingle(number) {
+        this.alloc(4).buffer.writeFloatLE(number, this.bytePosition);
+        this.bytePosition += 4;
+    }
+
+    /**
+     * Write a double to the buffer
+     * @param {Number} number 
+     */
+    writeDouble(number) {
+        this.alloc(4).buffer.writeDoubleLE(number, this.bytePosition);
+        this.bytePosition += 4;
+    }
+
+    /**
+     * Write a 7-bit number to the buffer
+     * @param {Number} number 
+     */
     write7BitNumber(number) {
         this.alloc(2);
         do {
@@ -56,17 +147,6 @@ class BufferWriter {
             this.bytePosition++;
         }
         while (number);
-    }
-
-    writeInt32(number) {
-        this.alloc(4).buffer.writeInt32LE(number, this.bytePosition);
-        this.bytePosition += 4;
-    }
-
-    writeUInt32(number) {
-        this.alloc(4);
-        this.buffer.writeUInt32LE(number, this.bytePosition);
-        this.bytePosition += 4;
     }
 
 }

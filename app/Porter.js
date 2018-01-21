@@ -8,6 +8,7 @@ const XnbError = require('./XnbError');
 /**
  * Used to save a parsed XNB file.
  * @param {object} xnbObject
+ * @returns {Boolean}
  */
 const exportFile = (filename, xnbObject) => {
     // get the dirname for the file
@@ -55,14 +56,10 @@ const exportFile = (filename, xnbObject) => {
             // Texture2D to PNG
             case 'Texture2D':
                 buffer = toPNG(
-                    foundContent.width,
-                    foundContent.height,
+                    exported.width,
+                    exported.height,
                     exported.data
                 );
-                
-                // delete width and height from the export
-                delete foundContent.width;
-                delete foundContent.height;
 
                 extension = 'png';
                 break;
@@ -100,7 +97,103 @@ const exportFile = (filename, xnbObject) => {
     return true;
 }
 
-module.exports = exportFile;
+exports.exportFile = exportFile;
+
+/**
+ * Resolves all exported content back into the object
+ * @param {String} filename 
+ * @returns {Object}
+ */
+const resolveImports = filename => {
+    // get the directory name
+    const dirname = path.dirname(filename);
+    // get the basename for the file
+    const basename = path.basename(filename);
+
+    // read in the file contents
+    const buffer = fs.readFileSync(filename);
+    // get the JSON for the contents
+    const json = JSON.parse(buffer);
+
+    // need content
+    if (!json.hasOwnProperty('content'))
+        throw new XnbError(`${filename} does not have "content".`);
+
+    // pull reference of content out of data
+    const content = json.content;
+    // search the content object for exports to process
+    const found = search(content, 'export');
+
+    // if we found data to export
+    if (found) {
+        // get the key path from found
+        const keyPath = found.path;
+        // get the exported buffer from found
+        const exported = found.value;
+
+        // resolve found content based on key path if empty then its just content
+        const foundContent = (keyPath.length ? content[keyPath] : content);
+
+        if (exported == undefined)
+            throw new XnbError('Invalid file export!');
+        
+        // form the path for the exported file
+        const exportedPath = path.join(dirname, exported);
+        // load in the exported file
+        const exportedFile = fs.readFileSync(exportedPath);
+        // get the extention of the file
+        const ext = path.extname(exportedPath);
+
+        // switch over supported file extension types
+        switch (ext) {
+            // Texture2D to PNG
+            case '.png':
+                // get the png data
+                const png = fromPNG(exportedFile);
+                // change the exported contents
+                const data = {
+                    data: png.data,
+                    width: png.width,
+                    height: png.height
+                };
+
+                if (keyPath.length)
+                    json['content'][keyPath]['export'] = data;
+                else
+                    json['content']['export'] = data;
+                break;
+
+            // Compiled Effects
+            case '.cso':
+                json['content'] = {
+                    type: 'Effect',
+                    data: exportedFile
+                }
+                break;
+
+            // TBin Map
+            case '.tbin':
+                json['content'] = {
+                    type: 'TBin',
+                    data: exportedFile
+                }
+                break;
+            
+            // BmFont Xml
+            case '.xml':
+                json['content'] = {
+                    type: 'BmFont',
+                    data: exportedFile.toString()
+                }
+                break;
+        }   
+    }
+
+    // return the JSON
+    return json;
+}
+
+exports.resolveImports = resolveImports;
 
 /**
  * Search an object for a given key.
@@ -155,4 +248,18 @@ const toPNG = (width, height, buffer) => {
 
     // return the PNG buffer
     return PNG.sync.write(png);
+}
+
+/**
+ * Converts PNG to Texture2D
+ * @param {Buffer} data 
+ * @returns {Object}
+ */
+const fromPNG = data => {
+    const png = PNG.sync.read(data);
+    return {
+        data: png.data,
+        width: png.width,
+        height: png.height
+    };
 }

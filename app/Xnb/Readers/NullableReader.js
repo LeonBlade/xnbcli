@@ -1,5 +1,6 @@
 const BaseReader = require('./BaseReader');
 const BufferReader = require('../../BufferReader');
+const BufferWriter = require('../../BufferWriter');
 const BooleanReader = require('./BooleanReader');
 
 /**
@@ -31,10 +32,24 @@ class NullableReader extends BaseReader {
         // get an instance of boolean reader
         const booleanReader = new BooleanReader();
         // read in if the nullable has a value or not
-        let hasValue = booleanReader.read(buffer);
+        const hasValue = booleanReader.read(buffer);
 
         // return the value
         return (hasValue ? (this.reader.isValueType() ? this.reader.read(buffer) : resolver.read(buffer)) : null);
+    }
+
+    /**
+     * Writes Nullable into the buffer
+     * @param {BufferWriter} buffer
+     * @param {Mixed} data The data
+     * @param {ReaderResolver} resolver
+     */
+    write(buffer, content, resolver) {
+        //this.writeIndex(buffer, resolver);
+        const booleanReader = new BooleanReader();
+        buffer.writeByte(content != null);
+        if (content != null)
+            this.reader.write(buffer, content, (this.reader.isValueType() ? null : resolver));
     }
 
     isValueType() {

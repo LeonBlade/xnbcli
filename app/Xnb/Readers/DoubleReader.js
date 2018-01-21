@@ -1,5 +1,6 @@
 const BaseReader = require('./BaseReader');
 const BufferReader = require('../../BufferReader');
+const BufferWriter = require('../../BufferWriter');
 
 /**
  * Double Reader
@@ -14,6 +15,17 @@ class DoubleReader extends BaseReader {
      */
     read(buffer) {
         return buffer.readDouble();
+    }
+
+    /**
+     * Writes Double into buffer
+     * @param {BufferWriter} buffer
+     * @param {Mixed} data
+     * @param {ReaderResolver}
+     */
+    write(buffer, content, resolver) {
+        this.writeIndex(buffer, resolver);
+        
     }
 }
 

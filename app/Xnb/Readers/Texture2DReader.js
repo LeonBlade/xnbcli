@@ -51,14 +51,58 @@ class Texture2DReader extends BaseReader {
 
         return {
             format,
-            width,
-            height,
-            export: { type: this.type, data }
+            export: { 
+                type: this.type, 
+                data,
+                width,
+                height
+            }
         };
     }
 
-    write(data) {
+    /**
+     * Writes Texture2D into the buffer
+     * @param {BufferWriter} buffer
+     * @param {Mixed} data The data
+     * @param {ReaderResolver} resolver
+     */
+    write(buffer, content, resolver) {
+        const int32Reader = new Int32Reader();
+        const uint32Reader = new UInt32Reader();
 
+        this.writeIndex(buffer, resolver);
+
+        const width = content.export.width;
+        const height = content.export.height;
+
+        Log.debug(`Width: ${width}, Height: ${height}`);
+        Log.debug(`Format: ${content.format}`);
+
+        int32Reader.write(buffer, content.format, null);
+        uint32Reader.write(buffer, content.export.width, null);
+        uint32Reader.write(buffer, content.export.height, null);
+        uint32Reader.write(buffer, 1, null);
+
+        let data = content.export.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+            const alpha = data[i + 3] / 255;
+            data[i    ] = Math.floor(data[i    ] * alpha);
+            data[i + 1] = Math.floor(data[i + 1] * alpha);
+            data[i + 2] = Math.floor(data[i + 2] * alpha);
+        }
+
+        if (content.format == 4)
+            data = dxt.compress(data, width, height, dxt.kDxt1);
+        else if (content.format == 5)
+            data = dxt.compress(data, width, height, dxt.kDxt3);
+        else if (content.format == 6)
+            data = dxt.compress(data, width, height, dxt.kDxt5);
+        
+        uint32Reader.write(buffer, data.length, null);
+        buffer.concat(data);
+
+        require('fs').writeFileSync('../../Desktop/test.bin', data);
     }
 
     isValueType() {

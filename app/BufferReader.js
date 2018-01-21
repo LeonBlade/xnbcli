@@ -64,7 +64,7 @@ class BufferReader {
         const offset = this._offset;
         this._offset = Math.max(origin + Number.parseInt(index), 0);
         if (this._offset < 0 || this._offset > this.buffer.length)
-            throw new XnbError(`Buffer seek out of bounds!`);
+            throw new XnbError(`Buffer seek out of bounds! ${this._offset} ${this.buffer.length}`);
         return this._offset - offset;
     }
 

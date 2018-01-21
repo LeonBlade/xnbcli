@@ -4,9 +4,10 @@ const program = require('commander');
 const Log = require('./app/Log');
 const Xnb = require('./app/Xnb');
 const Xact = require('./app/Xact');
-const exportFile = require('./app/Exporter');
+const { exportFile, resolveImports } = require('./app/Porter');
 const XnbError = require('./app/XnbError');
 const chalk = require('chalk');
+const mkdirp = require('mkdirp');
 
 // local variables for input and output to check if they were set later
 let inputValue;
@@ -17,7 +18,7 @@ let success = 0;
 let fail = 0;
 
 // create the program and set version number
-program.version('0.5.0');
+program.version('1.0.0');
 
 // turn on debug printing
 program.option('--debug', 'Enables debug verbose printing.', () => {
@@ -49,6 +50,10 @@ program
     .action((input, output) => {
         // process the pack
         processPack(input, output);
+
+         // give a final analysis of the files
+         console.log(`${chalk.bold.green('Success')} ${success}`);
+         console.log(`${chalk.bold.red('Fail')} ${fail}`);
     });
 
 // default action
@@ -112,9 +117,6 @@ function processUnpack(input, output) {
             // increase fail count
             fail++;
         }
-        finally {
-            // TODO: remove broken file output
-        }
     }
     // for XACT files
     else if (ext == '.xgs' || ext == '.xwb' || ext == '.xsb') {
@@ -149,7 +151,31 @@ function processPack(input, output) {
             // create instance of xnb
             const xnb = new Xnb();
 
-            xnb.convert(input);
+            Log.info(`Reading file "${input}" ...`);
+
+            // resolve the imports
+            const json = resolveImports(input);
+
+            // convert the JSON to XNB
+            const buffer = xnb.convert(json);
+
+            // if output is undefined then set path to input path
+            if (output === undefined)
+                output = path.dirname(input);
+            
+            // get the basename from the input
+            const basename = path.basename(input, '.json');
+            // get the output file path
+            const outputFile = path.resolve(output, basename + '.xnb');
+            // get the dirname for the output file
+            const dirname = path.dirname(outputFile);
+
+            // create folder path if it doesn't exist
+            if (!fs.existsSync(dirname))
+                mkdirp.sync(dirname);
+
+            // write the buffer to the output
+            fs.writeFileSync(outputFile, buffer);
 
             // increase success count
             success++;

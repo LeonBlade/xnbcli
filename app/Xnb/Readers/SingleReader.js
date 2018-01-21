@@ -15,6 +15,11 @@ class SingleReader extends BaseReader {
     read(buffer) {
         return buffer.readSingle();
     }
+
+    write(buffer, content, resolver) {
+        this.writeIndex(buffer, resolver);
+        buffer.writeSingle(content);
+    }
 }
 
 module.exports = SingleReader;

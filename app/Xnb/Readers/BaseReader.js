@@ -41,8 +41,8 @@ class BaseReader {
     }
 
     /**
-     * Writes Dictionary into buffer
-     * @param {BufferWriter} buffer
+     * Writes into the buffer
+     * @param {BufferWriter} buffer The buffer to write to
      * @param {Mixed} data The data to parse to write to the buffer
      * @param {ReaderResolver} resolver ReaderResolver to write non-primitive types
      */

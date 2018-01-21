@@ -1,5 +1,6 @@
 const BaseReader = require('./BaseReader');
 const BufferReader = require('../../BufferReader');
+const BufferWriter = require('../../BufferWriter');
 
 /**
  * Boolean Reader
@@ -14,6 +15,17 @@ class BooleanReader extends BaseReader {
      */
     read(buffer) {
         return Boolean(buffer.read(1).readInt8());
+    }
+
+    /**
+     * Writes Boolean into buffer
+     * @param {BufferWriter} buffer
+     * @param {Mixed} data
+     * @param {ReaderResolver}
+     */
+    write(buffer, content, resolver) {
+        this.writeIndex(buffer, resolver);
+        buffer.writeByte(content);
     }
 }
 

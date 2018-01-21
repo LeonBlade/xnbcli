@@ -22,6 +22,14 @@ class Vector3Reader extends BaseReader {
 
         return { x, y, z };
     }
+
+    write(buffer, content, resolver) {
+        this.writeIndex(buffer, resolver);
+        const singleReader = new SingleReader();
+        singleReader.write(buffer, content.x, null);
+        singleReader.write(buffer, content.y, null);
+        singleReader.write(buffer, content.z, null);
+    }
 }
 
 module.exports = Vector3Reader;
