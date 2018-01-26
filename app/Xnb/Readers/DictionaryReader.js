@@ -73,9 +73,9 @@ class DictionaryReader extends BaseReader {
 
         // write the amount of entries in the Dictionary
         buffer.writeUInt32(Object.keys(content).length);
-
+        
         // loop over the entries
-        for (let key in content) {
+        for (let key of Object.keys(content)) {
             // write the key
             this.key.write(buffer, key, (this.key.isValueType() ? null : resolver));
             // write the value
