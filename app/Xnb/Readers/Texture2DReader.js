@@ -101,8 +101,6 @@ class Texture2DReader extends BaseReader {
         
         uint32Reader.write(buffer, data.length, null);
         buffer.concat(data);
-
-        require('fs').writeFileSync('../../Desktop/test.bin', data);
     }
 
     isValueType() {
