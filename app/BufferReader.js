@@ -251,7 +251,7 @@ class BufferReader {
     readInt32() {
         const read = this.read(4);
         if (this._endianus == LITTLE_ENDIAN)
-            return read.readInt16LE();
+            return read.readInt32LE();
         return read.readInt32BE();
     }
 
