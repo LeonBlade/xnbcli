@@ -8,6 +8,7 @@ const { exportFile, resolveImports } = require('./app/Porter');
 const XnbError = require('./app/XnbError');
 const chalk = require('chalk');
 const mkdirp = require('mkdirp');
+const walk = require('walk');
 
 // local variables for input and output to check if they were set later
 let inputValue;
@@ -35,12 +36,8 @@ program
     .command('unpack <input> [output]')
     .description('Used to unpack XNB files.')
     .action((input, output) => {
-        // process the upack
-        processUnpack(input, output);
-
-        // give a final analysis of the files
-        console.log(`${chalk.bold.green('Success')} ${success}`);
-        console.log(`${chalk.bold.red('Fail')} ${fail}`);
+        // process the unpack
+        processFiles(processUnpack, input, output, details);
     });
 
 // XNB pack Command
@@ -49,11 +46,7 @@ program
     .description('Used to pack XNB files.')
     .action((input, output) => {
         // process the pack
-        processPack(input, output);
-
-         // give a final analysis of the files
-         console.log(`${chalk.bold.green('Success')} ${success}`);
-         console.log(`${chalk.bold.red('Fail')} ${fail}`);
+        processFiles(processPack, input, output, details);
     });
 
 // default action
@@ -67,67 +60,49 @@ if (!process.argv.slice(2).length)
     program.help();
 
 /**
+ * Display the results of the processing
+ */
+function details() {
+    // give a final analysis of the files
+    console.log(`${chalk.bold.green('Success')} ${success}`);
+    console.log(`${chalk.bold.red('Fail')} ${fail}`);
+}
+
+/**
  * Takes input and processes input for unpacking.
  * @param {String} input
  * @param {String} output
  */
 function processUnpack(input, output) {
-    // get stats for the input
-    const stats = fs.statSync(input);
-    // get the extension
-    const ext = path.extname(input).toLocaleLowerCase();
-    // check if input is a directory
-    if (stats.isDirectory())
-        for (let dir of fs.readdirSync(input))
-            processUnpack(path.resolve(input, dir), path.resolve(output, path.basename(input), path.dirname(dir)));
-    // for XNB files
-    else if (ext == '.xnb') {
-        // catch any exceptions to keep a batch of files moving
-        try {
-             // create new instance of XNB
-            const xnb = new Xnb();
+    // catch any exceptions to keep a batch of files moving
+    try {
+        // ensure that the input file has the right extension
+        if (path.extname(input).toLocaleLowerCase() != '.xnb')
+            return;
 
-            // load the XNB and get the object from it
-            const result = xnb.load(input);
+        // create new instance of XNB
+        const xnb = new Xnb();
 
-            // if output is undefined then set path to input path
-            if (output === undefined)
-                output = path.dirname(input);
+        // load the XNB and get the object from it
+        const result = xnb.load(input);
 
-            // get the basename from the input
-            const basename = path.basename(input, '.xnb');
-            // get the dirname from the input
-            const dirname = path.dirname(input);
-
-            // get the output file path
-            const outputFile = path.resolve(output, basename + '.json');
-
-            // save the file
-            if (exportFile(outputFile, result))
-                Log.info(`Output file saved: ${outputFile}`);
-            else
-                Log.error(`File ${outputFile} failed to save!`);
-
-            // increase success count
-            success++;
+        // save the file
+        if (!exportFile(output, result)) {
+            Log.error(`File ${output} failed to save!`);
+            return fail++;
         }
-        catch (ex) {
-            // log out the error
-            Log.error(`Filename: ${input}\n${ex.stack}\n`);
-            // increase fail count
-            fail++;
-        }
+
+        // log that the file was saved
+        Log.info(`Output file saved: ${output}`);
+
+        // increase success count
+        success++;
     }
-    // for XACT files
-    else if (ext == '.xgs' || ext == '.xwb' || ext == '.xsb') {
-        try {
-            // load the input file
-            Xact.load(input);
-        }
-        catch (ex) {
-            // log out the error
-            Log.error(`Filename: ${path.basename(input)}\n${ex.stack}\n`);
-        }
+    catch (ex) {
+        // log out the error
+        Log.error(`Filename: ${input}\n${ex.stack}\n`);
+        // increase fail count
+        fail++;
     }
 }
 
@@ -135,56 +110,87 @@ function processUnpack(input, output) {
  * Process the pack of files to xnb
  * @param {String} input 
  * @param {String} output 
+ * @param {Function} done
  */
 function processPack(input, output) {
+    try {
+        // ensure that the input file has the right extension
+        if (path.extname(input).toLocaleLowerCase() != '.json')
+            return;
+
+        Log.info(`Reading file "${input}" ...`);
+
+        // create instance of xnb
+        const xnb = new Xnb();
+
+        // resolve the imports
+        const json = resolveImports(input);
+        // convert the JSON to XNB
+        const buffer = xnb.convert(json);
+
+        // write the buffer to the output
+        fs.writeFileSync(output, buffer);
+
+        // log that the file was saved
+        Log.info(`Output file saved: ${output}`);
+
+        // increase success count
+        success++;
+    }
+    catch (ex) {
+        // log out the error
+        Log.error(`Filename: ${input}\n${ex.stack}\n`);
+        // increase fail count
+        fail++;
+    }
+}
+
+/**
+ * Used to walk a path with input/output for processing
+ * @param {Function} fn
+ * @param {String} input 
+ * @param {String} output
+ * @param {Function} cb
+ */
+function processFiles(fn, input, output, cb) {
     // get stats for the input
     const stats = fs.statSync(input);
-    // get the extension
-    const ext = path.extname(input).toLocaleLowerCase();
-    // check if input is a directory
-    if (stats.isDirectory())
-        for (let dir of fs.readdirSync(input))
-            processPack(path.resolve(input, dir), path.resolve(output, path.basename(input), path.dirname(dir)));
-    else if (ext == ".json") {
-        // catch exceptions to not quit in a batch of files
-        try {
-            // create instance of xnb
-            const xnb = new Xnb();
 
-            Log.info(`Reading file "${input}" ...`);
+    // if this isn't a directory then just run the function
+    if (!stats.isDirectory())
+        return fn(input, output);
 
-            // resolve the imports
-            const json = resolveImports(input);
+    // get out grandpa's walker
+    const walker = walk.walk(input);
 
-            // convert the JSON to XNB
-            const buffer = xnb.convert(json);
+    // when we encounter a file
+    walker.on('file', (root, stats, next) => {
+        // get the extension
+        const ext = path.extname(stats.name).toLocaleLowerCase();
+        // skip files that aren't JSON or XNB
+        if (ext != '.json' && ext != '.xnb') 
+            return next();
 
-            // if output is undefined then set path to input path
-            if (output === undefined)
-                output = path.dirname(input);
-            
-            // get the basename from the input
-            const basename = path.basename(input, '.json');
-            // get the output file path
-            const outputFile = path.resolve(output, basename + '.xnb');
-            // get the dirname for the output file
-            const dirname = path.dirname(outputFile);
+        // swap the input base directory with the base output directory for our target directory
+        const target = root.replace(input, output);
+        // get the source path
+        const inputFile = path.join(root, stats.name);
+        // get the target ext
+        const targetExt = ext == '.xnb' ? '.json' : '.xnb';
+        // form the output file path
+        const outputFile = path.join(target, path.basename(stats.name, ext) + targetExt);
+    
+        // run the function
+        fn(inputFile, outputFile);
+        // next file
+        next();
+    });
 
-            // create folder path if it doesn't exist
-            if (!fs.existsSync(dirname))
-                mkdirp.sync(dirname);
+    // any errors that happen
+    walker.on('errors', (root, stats, next) => {
+        next();
+    });
 
-            // write the buffer to the output
-            fs.writeFileSync(outputFile, buffer);
-
-            // increase success count
-            success++;
-        }
-        catch (ex) {
-            // log out the error
-            Log.error(`Filename: ${input}\n${ex.stack}\n`);
-            // increase fail count
-            fail++;
-        }
-    }
+    // done walking the dog
+    walker.on('end', cb);
 }
