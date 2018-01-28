@@ -19,7 +19,7 @@ let success = 0;
 let fail = 0;
 
 // create the program and set version number
-program.version('1.0.0');
+program.version('1.0.1');
 
 // turn on debug printing
 program.option('--debug', 'Enables debug verbose printing.', () => {
@@ -108,8 +108,8 @@ function processUnpack(input, output) {
 
 /**
  * Process the pack of files to xnb
- * @param {String} input 
- * @param {String} output 
+ * @param {String} input
+ * @param {String} output
  * @param {Function} done
  */
 function processPack(input, output) {
@@ -148,7 +148,7 @@ function processPack(input, output) {
 /**
  * Used to walk a path with input/output for processing
  * @param {Function} fn
- * @param {String} input 
+ * @param {String} input
  * @param {String} output
  * @param {Function} cb
  */
@@ -168,7 +168,7 @@ function processFiles(fn, input, output, cb) {
         // get the extension
         const ext = path.extname(stats.name).toLocaleLowerCase();
         // skip files that aren't JSON or XNB
-        if (ext != '.json' && ext != '.xnb') 
+        if (ext != '.json' && ext != '.xnb')
             return next();
 
         // swap the input base directory with the base output directory for our target directory
@@ -179,7 +179,11 @@ function processFiles(fn, input, output, cb) {
         const targetExt = ext == '.xnb' ? '.json' : '.xnb';
         // form the output file path
         const outputFile = path.join(target, path.basename(stats.name, ext) + targetExt);
-    
+
+        // ensure the path to the output file exists
+        if (!fs.existsSync(dirname))
+            mkdirp.sync(outputFile);
+
         // run the function
         fn(inputFile, outputFile);
         // next file
