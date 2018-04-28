@@ -18,4 +18,4 @@ deploy:
     - "xnbcli-macos.zip"
   on:
     repo: LeonBlade/xnbcli
-    branch: test
+    branch: release
