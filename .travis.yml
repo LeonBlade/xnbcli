@@ -1,7 +1,21 @@
 language: node_js
 node_js:
-  - "10"
+- lts/*
 os:
-  - linux
-  - osx
-  - windows
+- linux
+- osx
+install:
+- npm install
+- npm install pkg
+- ./.travis.build.sh
+deploy:
+  skip_cleanup: true
+  provider: releases
+  api_key:
+    secure: aK9vbh+idJX3fj9y7EeBrW1TKeiRfAcvPDRuZjdppJqVpcmpCgTf6T6a6+vYRDfr0r7VIDuqik2jyg7hOrExWBOv7ovkC9yAcCYSREcg0jZO9dK9g0c1VcaPIW4OqtArK+gTW20jbwxTSHGfphpjw9yNDRxUq87Qx+ciTQsF+Usg8QwmQ+Du7vXUo5WMKmWpVHhupcM7HT2IXDQ4OHqCwo0FRyBimRBS2gdS/qZmqya3QUMwyjFImMIphwOumsqckoS0PRJAEDJeKWkZeGXCwpPmZ8c3uliXwhaxEwQuzUKspMG2ZMJUY9OwcY3KYGdYGeNNBm6rf/ltglebWH0X+VjfRKmc5yftkiT0re3Og4l4TNSaijMqjseFbPyyJQDwMPJ7VmkX/fzUOEO7chzHoDcECiUi+LbF9KjOhajPuDRHaMYD2CkihQ2970QbYKsOXDd+hvTx8mAPmFMFEoFZiLXJsX+nvAw5nwxWdI5P5BsaKgogop7o8mYBUHAgzAslPJGL1uTSraSqmcaDtBJCea++6yOEdIFFrLmAjkgh1k1y9rUC/QV8uOGneLpvHnnMusPbGPHIwJPKs3qf/7wLHZnQs3xtTEV60xJfY3gmNTQ2gzL67nV6ih2Z1+dHgkMgF4JXRJiyTRvl47NKGaNXdi5/GtkBDTgrU1pDyupafQk=
+  file:
+    - "xnbcli-linux.zip"
+    - "xnbcli-macos.zip"
+  on:
+    repo: LeonBlade/xnbcli
+    branch: test
