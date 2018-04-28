@@ -181,7 +181,7 @@ function processFiles(fn, input, output, cb) {
         const outputFile = path.join(target, path.basename(stats.name, ext) + targetExt);
 
         // ensure the path to the output file exists
-        if (!fs.existsSync(dirname))
+        if (!fs.existsSync(path.dirname(inputFile)))
             mkdirp.sync(outputFile);
 
         // run the function
