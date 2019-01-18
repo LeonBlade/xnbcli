@@ -6,6 +6,10 @@
   "keywords": [
     "xnb"
   ],
+  "scripts": {
+    "unpack": "node ./xnbcli unpack ./packed ./unpacked",
+    "pack": "node ./xnbcli pack ./unpacked ./packed"
+  },
   "author": "James Stine",
   "license": "ISC",
   "dependencies": {
