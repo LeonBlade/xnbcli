@@ -28,7 +28,6 @@ class Presser {
 
         // create the LZX instance with 16-bit window frame
         const lzx = new Lzx(16);
-        const decompressedBuffer = Buffer.alloc(decompressedTodo);
 
         // the full decompressed array
         let decompressed = [];
