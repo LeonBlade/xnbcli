@@ -4,7 +4,14 @@
 # NPM
 node_modules
 
-# Test
-test
+# Dev files
 /.vscode
 /.jshintrc
+
+# Packed/Unpacked files
+packed/**
+unpacked/**
+
+# Excluding our md files
+!packed/*.md
+!unpacked/*.md
