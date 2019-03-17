@@ -1,4 +1,7 @@
 # xnbcli
+
+[![Build Status](https://travis-ci.org/LeonBlade/xnbcli.svg?branch=master)](https://travis-ci.org/LeonBlade/xnbcli)
+
 A CLI tool for XNB packing/unpacking purpose built for Stardew Valley.
 
 This tool currently supports unpacking all LZX compressed XNB files for Stardew Valley.  
