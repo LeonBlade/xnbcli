@@ -19,7 +19,7 @@ let success = 0;
 let fail = 0;
 
 // create the program and set version number
-program.version('1.0.1');
+program.version('1.0.2');
 
 // turn on debug printing
 program.option('--debug', 'Enables debug verbose printing.', () => {
