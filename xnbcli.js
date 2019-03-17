@@ -157,8 +157,23 @@ function processFiles(fn, input, output, cb) {
     const stats = fs.statSync(input);
 
     // if this isn't a directory then just run the function
-    if (!stats.isDirectory())
+    if (!stats.isDirectory()) {
+        // get the extension from the original path name
+        const ext = path.extname(input);
+        // get the new extension
+        const newExt = (ext == '.xnb' ? '.json' : '.xnb');
+
+        // output is undefined or is a directory
+        if (output == undefined) {
+            output = path.join(path.dirname(input), path.basename(input, ext) + newExt); 
+        }
+        // output is a directory
+        else if (fs.statSync(output).isDirectory())
+            output = path.join(output, path.basename(input, ext) + newExt);
+
+        // call the function
         return fn(input, output);
+    }
 
     // get out grandpa's walker
     const walker = walk.walk(input);
