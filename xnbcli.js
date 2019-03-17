@@ -153,11 +153,9 @@ function processPack(input, output) {
  * @param {Function} cb
  */
 function processFiles(fn, input, output, cb) {
-    // get stats for the input
-    const stats = fs.statSync(input);
 
     // if this isn't a directory then just run the function
-    if (!stats.isDirectory()) {
+    if (!fs.statSync(input).isDirectory()) {
         // get the extension from the original path name
         const ext = path.extname(input);
         // get the new extension
@@ -174,6 +172,10 @@ function processFiles(fn, input, output, cb) {
         // call the function
         return fn(input, output);
     }
+
+    // output is undefined
+    if (output == undefined)
+        output = input;
 
     // get out grandpa's walker
     const walker = walk.walk(input);
