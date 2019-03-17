@@ -7,8 +7,8 @@
     "xnb"
   ],
   "scripts": {
-    "unpack": "node ./xnbcli unpack ./packed ./unpacked",
-    "pack": "node ./xnbcli pack ./unpacked ./packed"
+    "unpack": "node ./xnbcli.js unpack ./packed ./unpacked",
+    "pack": "node ./xnbcli.js pack ./unpacked ./packed"
   },
   "author": "James Stine",
   "license": "ISC",
