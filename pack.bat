@@ -1,0 +1,1 @@
+xnbcli.exe pack ".\unpacked" ".\packed"
