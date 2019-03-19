@@ -201,7 +201,7 @@ class Xnb {
             buffer.write(this.target);
             buffer.writeByte(this.formatVersion);
             // write the LZ4 mask for android compression only
-            buffer.writeByte(this.hidef | (this.compressed && this.target == 'a') ? COMPRESSED_LZ4_MASK : 0);
+            buffer.writeByte(this.hidef | ((this.compressed && this.target == 'a') ? COMPRESSED_LZ4_MASK : 0));
 
             // write temporary filesize
             buffer.writeUInt32(0);
@@ -347,7 +347,7 @@ class Xnb {
         this.compressed = (flags & COMPRESSED_LZX_MASK) || (flags & COMPRESSED_LZ4_MASK) != 0;
         // set the compression type
         // NOTE: probably a better way to do both lines but sticking with this for now
-        this.compressionType = (flags & COMPRESSED_LZX_MASK) != 0 ? COMPRESSED_LZX_MASK : COMPRESSED_LZ4_MASK;
+        this.compressionType = (flags & COMPRESSED_LZX_MASK) != 0 ? COMPRESSED_LZX_MASK : ((flags & COMPRESSED_LZ4_MASK) ? COMPRESSED_LZ4_MASK : 0);
         // debug content information
         Log.debug(`Content: ${(this.hidef ? 'HiDef' : 'Reach')}`);
         // log compressed state
