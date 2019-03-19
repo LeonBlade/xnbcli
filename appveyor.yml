@@ -1,0 +1,39 @@
+environment:
+  nodejs_version: "10"
+
+image:
+  - Visual Studio 2017
+
+platform:
+  - x86
+  - x64
+
+cache:
+  - node_modules
+
+install:
+  - ps: Install-Product node $env:nodejs_version $env:platform
+  - npm i
+  - npm i -g pkg
+  - pkg -t win-%PLATFORM% xnbcli.js
+  - cp node_modules/dxt/build/Release/dxt.node .
+  - cp node_modules/lz4/build/Release/lz4.node .
+  - cp node_modules/lz4/build/Release/xxhash.node .
+  - 7z a xnbcli-windows-%PLATFORM%.zip xnbcli.exe dxt.node lz4.node xxhash.node
+
+artifacts:
+  - path: xnbcli-windows-%PLATFORM%.zip
+    name: xnbcli-windows
+
+build: off
+
+deploy:
+  tag: $(appveyor_repo_tag_name)
+  release: $(appveyor_repo_tag_name)
+  provider: GitHub
+  auth_token:
+    secure: O6Rsj+hoS5X7Q1u7TjtFwjRN53ohwjF8Mik/BpVidoefAag5FfpxoWqS5GTdJECG
+  artifact: xnbcli-windows-%PLATFORM%.zip
+  on:
+    branch: master
+    appveyor_repo_tag: true
