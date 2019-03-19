@@ -9,55 +9,84 @@ const XnbError = require('./app/XnbError');
 const chalk = require('chalk');
 const mkdirp = require('mkdirp');
 const walk = require('walk');
-
-// local variables for input and output to check if they were set later
-let inputValue;
-let outputValue;
+const got = require('got');
+const compareVersions = require('compare-versions');
 
 // used for displaying the tally of success and fail
 let success = 0;
 let fail = 0;
 
-// create the program and set version number
-program.version('1.0.2');
+// define the version number
+const VERSION = '1.0.2';
 
-// turn on debug printing
-program.option('--debug', 'Enables debug verbose printing.', () => {
-    Log.setMode(Log.DEBUG, true);
-});
+// async wrapper for function
+(async () => {
 
-// only display errors
-program.option('--errors', 'Only prints error messages.', () => {
-    Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false);
-});
+    try {
+        // fetch the package.json to see if there's a new version available
+        const response = await got('https://raw.githubusercontent.com/LeonBlade/xnbcli/master/package.json', { json: true });
+        const remoteVersion = response.body.version;
 
-// XNB unpack command
-program
-    .command('unpack <input> [output]')
-    .description('Used to unpack XNB files.')
-    .action((input, output) => {
-        // process the unpack
-        processFiles(processUnpack, input, output, details);
+        // compare remote version with the current version
+        if (compareVersions(remoteVersion, VERSION) > 0) {
+            // NOTE: this bugs the user every time they run the tool, not exactly a bad idea but maybe should think
+            // of a different approach to not hit github every time?  idk maybe it doesn't matter though
+            Log.info(`${chalk.bold.green(`xnbcli v${remoteVersion} is available!`)} Visit ${chalk.blue('https://github.com/LeonBlade/xnbcli/releases')} to get the latest release.`);
+        }
+    }
+    catch (error) {
+        Log.error('Failed to search for a new update. Application should still function normally.');
+        Log.error(error.response.body);
+    }
+    
+    // call the init function to get the party started
+    init();
+
+})();
+
+// initialize function called after we fetch the newest version
+function init() {
+    // create the program and set version number
+    program.version(VERSION);
+
+    // turn on debug printing
+    program.option('--debug', 'Enables debug verbose printing.', () => {
+        Log.setMode(Log.DEBUG, true);
     });
 
-// XNB pack Command
-program
-    .command('pack <input> [output]')
-    .description('Used to pack XNB files.')
-    .action((input, output) => {
-        // process the pack
-        processFiles(processPack, input, output, details);
+    // only display errors
+    program.option('--errors', 'Only prints error messages.', () => {
+        Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false);
     });
 
-// default action
-program.action(() => program.help());
+    // XNB unpack command
+    program
+        .command('unpack <input> [output]')
+        .description('Used to unpack XNB files.')
+        .action((input, output) => {
+            // process the unpack
+            processFiles(processUnpack, input, output, details);
+        });
 
-// parse the input and run the commander program
-program.parse(process.argv);
+    // XNB pack Command
+    program
+        .command('pack <input> [output]')
+        .description('Used to pack XNB files.')
+        .action((input, output) => {
+            // process the pack
+            processFiles(processPack, input, output, details);
+        });
 
-// show help if we didn't specify any valid input
-if (!process.argv.slice(2).length)
-    program.help();
+    // default action
+    program.action(() => program.help());
+
+    // parse the input and run the commander program
+    program.parse(process.argv);
+
+    // show help if we didn't specify any valid input
+    if (!process.argv.slice(2).length)
+        program.help();
+}
 
 /**
  * Display the results of the processing
