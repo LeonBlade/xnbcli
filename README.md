@@ -10,26 +10,30 @@ There is some basic groundwork for XACT as well.
 The end goal for this project is to serve as a CLI for a GUI wrapper to leverage so the average user can interface with
 XNB files a lot easier.
 
-## Requirements
+## Usage
+
+**Unpacking XNB files**
+
+Place any files you wish to extract in the `packed` folder and run the appropriate file for unpacking.  `unpack.bat`, `unpack.command` or `unpack.sh`.
+
+**Packing XNB files**
+
+Place any files you wish to repack back into XNB files in the `unpacked` folder and run the appropriate file for packing.  `pack.bat`, `pack.command` or `pack.sh`.
+
+**Terminal Use**
+
+`xnbcli (pack|unpack) [input] [output]`
+
+## Developers
+
+If you wish to run this with Node.js and all the source code, please refer to the following.
 
 - `node.js` installed
 - `npm` installed
 - `python` installed
 - (for Windows users) `windows-build-tools` installed (`npm i --g --production windows-build-tools`)
-
-## Installation
-
-`npm install`
-
-## Usage
-
-You can `unpack` and `pack` XNB files using this tool. For ease of use, a script file is included that will automatically unpack/pack whatever you put in their respective folders. To learn how to use it manually, just look at the script file or look at the usage when you run the tool in your favorite terminal.
-
-## Tips
-
-- If you are unable to run `pack.sh` or `unpack.sh` script files, simply run one of the following npm scripts:
-`npm run pack` or `npm run unpack`
-- You should process one file at a time. Multiple `.xnb` files or collections of `.png` and `.json` files might cause errors.
+- Run `npm install` to install node packages.
+- `npm run unpack` and `npm run pack` scripts are available for use in the `package.json` file.
 
 ## License
 GNU GPL v3.0
