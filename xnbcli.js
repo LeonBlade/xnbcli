@@ -17,7 +17,7 @@ let success = 0;
 let fail = 0;
 
 // define the version number
-const VERSION = '1.0.3';
+const VERSION = '1.0.4';
 
 // async wrapper for function
 (async () => {
