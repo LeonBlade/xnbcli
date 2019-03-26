@@ -194,20 +194,21 @@ class Xnb {
             this.target = json.header.target;
             this.formatVersion = json.header.formatVersion;
             this.hidef = json.header.hidef;
-            this.compressed = (this.target == 'a') ? true : false; // support android LZ4 compression
+            const lz4Compression = (this.target == 'a' || this.target == 'i');
+            this.compressed = lz4Compression ? true : false; // support android LZ4 compression
 
             // write the header into the buffer
             buffer.write("XNB");
             buffer.write(this.target);
             buffer.writeByte(this.formatVersion);
             // write the LZ4 mask for android compression only
-            buffer.writeByte(this.hidef | ((this.compressed && this.target == 'a') ? COMPRESSED_LZ4_MASK : 0));
+            buffer.writeByte(this.hidef | ((this.compressed && lz4Compression) ? COMPRESSED_LZ4_MASK : 0));
 
             // write temporary filesize
             buffer.writeUInt32(0);
 
             // write the decompression size temporarily if android
-            if (this.target == 'a')
+            if (lz4Compression)
                 buffer.writeUInt32(0);
 
             // write the amount of readers
@@ -233,8 +234,8 @@ class Xnb {
             // NOTE: this buffer allocates default with 500 bytes
             buffer.trim();
 
-            // android LZ4 compression
-            if (this.target == 'a') {
+            // LZ4 compression
+            if (lz4Compression) {
                 // create buffer with just the content
                 const contentBuffer = Buffer.alloc(buffer.bytePosition - XNB_COMPRESSED_PROLOGUE_SIZE);
                 // copy the content from the main buffer into the content buffer
@@ -314,6 +315,9 @@ class Xnb {
                 break;
             case 'a':
                 Log.debug('Target platform: Android');
+                break;
+            case 'i':
+                Log.debug('Target platform: iOS');
                 break;
             default:
                 Log.warn(`Invalid target platform "${this.target}" found.`);
