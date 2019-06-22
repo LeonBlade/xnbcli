@@ -14,6 +14,8 @@ const simplifyType = type => {
     // gets the first part of the type
     let simple = type.split(/`|,/)[0];
 
+    Log.debug(`Type: ${simple}`);
+
     // check if its an array or not
     let isArray = simple.endsWith('[]');
     // if its an array then get the array type

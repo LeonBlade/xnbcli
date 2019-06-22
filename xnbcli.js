@@ -36,7 +36,7 @@ const VERSION = '1.0.4';
     }
     catch (error) {
         Log.error('Failed to search for a new update. Application should still function normally.');
-        Log.error(error.response.body);
+        Log.error(error);
     }
     
     // call the init function to get the party started

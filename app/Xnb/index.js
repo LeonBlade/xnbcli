@@ -137,7 +137,7 @@ class Xnb {
             const version = this.buffer.readInt32();
 
             // get the reader for this type
-            const simpleType = simplifyType(type);
+            const simpleType = simplifyType(type); 
             const reader = getReader(simpleType);
 
             // add reader to the list
