@@ -16,10 +16,9 @@ install:
   - npm i
   - npm i -g pkg
   - pkg -t win-%PLATFORM% xnbcli.js
-  - cp node_modules/dxt/build/Release/dxt.node .
   - cp node_modules/lz4/build/Release/lz4.node .
   - cp node_modules/lz4/build/Release/xxhash.node .
-  - 7z a xnbcli-windows-%PLATFORM%.zip xnbcli.exe dxt.node lz4.node xxhash.node packed unpacked unpack.bat pack.bat
+  - 7z a xnbcli-windows-%PLATFORM%.zip xnbcli.exe lz4.node xxhash.node packed unpacked unpack.bat pack.bat
 
 artifacts:
   - path: xnbcli-windows-%PLATFORM%.zip
