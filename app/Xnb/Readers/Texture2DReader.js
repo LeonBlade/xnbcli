@@ -2,7 +2,7 @@ const BaseReader = require('./BaseReader');
 const BufferReader = require('../../BufferReader');
 const Int32Reader = require('./Int32Reader');
 const UInt32Reader = require('./UInt32Reader');
-const dxt = require('dxt');
+const dxt = require('dxt-js');
 const Log = require('../../Log');
 const XnbError = require('../../XnbError');
 
