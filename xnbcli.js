@@ -1,11 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const program = require('commander');
+const { program } = require('commander');
 const Log = require('./app/Log');
 const Xnb = require('./app/Xnb');
-const Xact = require('./app/Xact');
 const { exportFile, resolveImports } = require('./app/Porter');
-const XnbError = require('./app/XnbError');
 const chalk = require('chalk');
 const mkdirp = require('mkdirp');
 const walk = require('walk');
@@ -50,14 +48,13 @@ function init() {
     program.version(VERSION);
 
     // turn on debug printing
-    program.option('--debug', 'Enables debug verbose printing.', () => {
-        Log.setMode(Log.DEBUG, true);
-    });
+    program.option('--debug', 'Enables debug verbose printing.', () => Log.setMode(Log.DEBUG, true));
 
     // only display errors
-    program.option('--errors', 'Only prints error messages.', () => {
-        Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false);
-    });
+    program.option('--errors', 'Only prints error messages.', () => Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false));
+
+    // display nothing
+    program.option('--silent', 'Prints nothing at all.', () => Log.setMode(Log.INFO | Log.WARN | Log.DEBUG | Log.ERROR, false));
 
     // XNB unpack command
     program
