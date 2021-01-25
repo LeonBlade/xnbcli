@@ -57,6 +57,7 @@ const simplifyType = type => {
 
         // List
         case 'Microsoft.Xna.Framework.Content.ListReader':
+        case 'System.Collections.Generic.List':
             let listType = parseSubtypes(type).map(simplifyType);
             return `List<${listType}>`;
 
