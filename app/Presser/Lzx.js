@@ -1,3 +1,47 @@
+/**
+ *
+ * This file is heavily based on MonoGame's implementation of their LzxDecoder attributed to Ali Scissons
+ * which is derived from libmspack by Stuart Cole.
+ *
+ * (C) 2003-2004 Stuart Caie.
+ * (C) 2011 Ali Scissons.
+ * (C) 2017 James Stine.
+ *
+ * The LZX method was created by Johnathan Forbes and Tomi Poutanen, adapted by Microsoft Corporation.
+ *
+ */
+
+/**
+ * GNU LESSER GENERAL PUBLIC LICENSE version 2.1
+ * LzxDecoder is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License (LGPL) version 2.1 
+ */
+
+/**
+ * MICROSOFT PUBLIC LICENSE
+ * This source code a derivative on LzxDecoder and is subject to the terms of the Microsoft Public License (Ms-PL). 
+ *  
+ * Redistribution and use in source and binary forms, with or without modification, 
+ * is permitted provided that redistributions of the source code retain the above 
+ * copyright notices and this file header. 
+ *  
+ * Additional copyright notices should be appended to the list above. 
+ * 
+ * For details, see <http://www.opensource.org/licenses/ms-pl.html>.
+ *
+ */
+
+/**
+ * I made the mistake of not including this license years ago. Big thanks to everyone involved and license has now been
+ * acknowleded properly as it should have been back in 2017.
+ *
+ * Resources:
+ *
+ * cabextract/libmspack - http://http://www.cabextract.org.uk/
+ * MonoGame LzxDecoder.cs - https://github.com/MonoGame/MonoGame/blob/master/MonoGame.Framework/Content/LzxDecoder.cs
+ *
+ */
+
 const Log = require('../Log');
 const BufferReader = require('../BufferReader');
 const XnbError = require('../XnbError');
