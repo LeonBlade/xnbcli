@@ -33,11 +33,11 @@ class Texture2DReader extends BaseReader {
         let data = buffer.read(dataSize);
 
         if (format == 4)
-            data = dxt.decompress(data, width, height, dxt.kDxt1);
+            data = dxt.decompress(data, width, height, dxt.flags.DXT1);
         else if (format == 5)
-            data = dxt.decompress(data, width, height, dxt.kDxt3);
+            data = dxt.decompress(data, width, height, dxt.flags.DXT3);
         else if (format == 6)
-            data = dxt.decompress(data, width, height, dxt.kDxt5);
+            data = dxt.decompress(data, width, height, dxt.flags.DXT5);
         else if (format == 2) {
             // require('fs').writeFileSync('texture.bin', data);
             throw new XnbError('Texture2D format type ECT1 not implemented!');
@@ -97,11 +97,11 @@ class Texture2DReader extends BaseReader {
         }
 
         if (content.format == 4)
-            data = dxt.compress(data, width, height, dxt.kDxt1);
+            data = dxt.compress(data, width, height, dxt.flags.DXT1);
         else if (content.format == 5)
-            data = dxt.compress(data, width, height, dxt.kDxt3);
+            data = dxt.compress(data, width, height, dxt.flags.DXT3);
         else if (content.format == 6)
-            data = dxt.compress(data, width, height, dxt.kDxt5);
+            data = dxt.compress(data, width, height, dxt.flags.DXT5);
         
         uint32Reader.write(buffer, data.length, null);
         buffer.concat(data);

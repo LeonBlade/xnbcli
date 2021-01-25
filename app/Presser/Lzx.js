@@ -35,12 +35,10 @@ const LENTABLE_SAFETY = 64; // table decoding overruns are allowed
  * a small 'position slot' number and a small offset from that slot are
  * encoded instead of one large offset.
  *
- * position_base[] is an index to the position slot bases
+ * Lzx.position_base[] is an index to the position slot bases
  *
- * extra_bits[] states how many bits of offset-from-base data is needed.
+ * Lzx.extra_bits[] states how many bits of offset-from-base data is needed.
  */
-const position_base = [];
-const extra_bits = [];
 
 /**
  * Used to compress and decompress LZX format buffer.
@@ -63,24 +61,24 @@ class Lzx {
             throw new XnbError('Window size out of range!');
 
         // initialize static tables
-        if (!extra_bits.length) {
+        if (!Lzx.extra_bits.length) {
             for (let i = 0, j = 0; i <= 50; i += 2) {
-                extra_bits[i] = extra_bits[i + 1] = j;
+                Lzx.extra_bits[i] = Lzx.extra_bits[i + 1] = j;
                 if (i != 0 && j < 17)
                     j++;
             }
         }
-        if (!position_base.length) {
+        if (!Lzx.position_base.length) {
             for (let i = 0, j = 0; i <= 50; i++) {
-                position_base[i] = j;
-                j += 1 << extra_bits[i];
+                Lzx.position_base[i] = j;
+                j += 1 << Lzx.extra_bits[i];
             }
         }
 
         Log.debug(`Extra Bits:`);
-        Log.debug(JSON.stringify(extra_bits));
+        Log.debug(JSON.stringify(Lzx.extra_bits));
         Log.debug(`Position Base:`);
-        Log.debug(JSON.stringify(position_base));
+        Log.debug(JSON.stringify(Lzx.position_base));
 
         /**
          * calculate required position slots
@@ -276,8 +274,8 @@ class Lzx {
 
                             if (match_offset > 2) {
                                 // not repeated offset
-                                let extra = extra_bits[match_offset];
-                                match_offset = position_base[match_offset] - 2;
+                                let extra = Lzx.extra_bits[match_offset];
+                                match_offset = Lzx.position_base[match_offset] - 2;
                                 if (extra > 3) {
                                     // verbatim and aligned bits
                                     extra -= 3;
@@ -396,9 +394,9 @@ class Lzx {
                             if (match_offset > 2) {
                                 // not repeated offset
                                 if (match_offset != 3) {
-                                    let extra = extra_bits[match_offset];
+                                    let extra = Lzx.extra_bits[match_offset];
                                     let verbatim_bits = buffer.readLZXBits(extra);
-                                    match_offset = position_base[match_offset] - 2 + verbatim_bits;
+                                    match_offset = Lzx.position_base[match_offset] - 2 + verbatim_bits;
                                 }
                                 else
                                     match_offset = 1;
@@ -719,5 +717,8 @@ class Lzx {
         }
     }
 }
+
+Lzx.position_base = [];
+Lzx.extra_bits = [];
 
 module.exports = Lzx;
