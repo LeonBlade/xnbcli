@@ -36,4 +36,4 @@ If you wish to run this with Node.js and all the source code, please refer to th
 - `npm run unpack` and `npm run pack` scripts are available for use in the `package.json` file.
 
 ## License
-GNU GPL v3.0
+GNU LGPL v3.0
