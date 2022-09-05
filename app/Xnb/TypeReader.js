@@ -102,6 +102,10 @@ const simplifyType = type => {
         case 'BmFont.XmlSourceReader':
             return 'BmFont';
 
+        case 'Microsoft.Xna.Framework.Content.SoundEffectReader':
+        case 'Microsoft.Xna.Framework.Content.SoundEffect':
+            return 'SoundEffect';
+
         // unimplemented type catch
         default:
             throw new XnbError(`Non-implemented type found, cannot resolve type "${simple}", "${type}".`);
