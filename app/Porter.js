@@ -78,6 +78,9 @@ const exportFile = (filename, xnbObject) => {
             case 'BmFont':
                 extension = 'xml';
                 break;
+
+            case 'SoundEffect':
+                extension = 'wav';
         }
 
         // output file name
