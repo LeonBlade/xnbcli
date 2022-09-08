@@ -103,7 +103,7 @@ const simplifyType = type => {
             return 'BmFont';
 
         case 'Microsoft.Xna.Framework.Content.SoundEffectReader':
-        case 'Microsoft.Xna.Framework.Content.SoundEffect':
+        case 'Microsoft.Xna.Framework.SoundEffect':
             return 'SoundEffect';
 
         // unimplemented type catch

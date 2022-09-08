@@ -1,6 +1,6 @@
 const BaseReader = require('./BaseReader');
 const BufferReader = require('../../BufferReader');
-const fs = require('fs');
+const XnbError = require('../../XnbError');
 
 /**
  * Single Reader
@@ -14,20 +14,53 @@ class SoundEffectReader extends BaseReader {
      * @returns {Number}
      */
     read(buffer) {
-        buffer.seek(1)
-        const riff = "524946468893DF00574156454A554E4B1C00000000000000000000000000000000000000000000000000000000000000666D742010";
-        const head1 = Buffer.from(riff, 'hex');
-        const chunk1 = buffer.read(19);
-        buffer.seek(2);
-        const chunk2 = Buffer.from('64617461', 'hex');
-        const chunk3 = buffer.read(buffer.size - buffer._offset - 12);
-        const final = Buffer.concat([head1, chunk1, chunk2, chunk3], head1.length + chunk1.length + chunk2.length + chunk3.length);
-        return { export: {type: this.type, data: final} }
-    }
+        const RIFF = 'RIFF';
+        const WAVEJUNK = 'WAVEJUNK';
+        const fmt = 'fmt ';
+        const data = 'data';
+        const headerSize = 80;  // size in bytes of the WAVE file header (this will always be the same given these constants ^)
 
-    write(buffer, content, resolver) {
-        this.writeIndex(buffer, resolver);
-        buffer.write(content);
+        // First, the WAVE header needs to be determined
+        let wavFmt = buffer.readInt32();
+        if(wavFmt != 18) {
+            throw new XnbError('This audio type is not supported');
+        }
+        let wavType = buffer.readInt16()
+        if(wavType != 1) {
+            throw new XnbError(`Only PCM (type 1) WAVs are supported. Got type ${wavType}`);
+        }
+        let channels = buffer.readInt16();
+        let sampleRate = buffer.readInt32();
+        let avgBps = buffer.readInt32(); // https://docs.fileformat.com/audio/wav/
+        let blockAlign = buffer.readInt16();
+        let bitDepth = buffer.readInt16();
+        buffer.seek(2);
+        let chunks = buffer.readInt32();
+
+        // Now we actually write the header
+        let headerBuffer = Buffer.alloc(headerSize);
+        headerBuffer.write(RIFF, 'utf-8')
+        headerBuffer.writeInt32LE(chunks + 72, 4)
+        headerBuffer.write(WAVEJUNK, 8)
+        headerBuffer.writeInt32LE(28, 16)
+        headerBuffer.writeInt32LE(0, 20)
+        headerBuffer.writeInt32LE(0, 24)
+        headerBuffer.writeInt32LE(0, 28)
+        headerBuffer.writeInt32LE(0, 32)
+        headerBuffer.writeInt32LE(0, 36)
+        headerBuffer.writeInt32LE(0, 40)
+        headerBuffer.write(fmt, 48)
+        headerBuffer.writeInt32LE(16, 52);
+        headerBuffer.writeInt16LE(1, 56);
+        headerBuffer.writeInt16LE(channels, 58);
+        headerBuffer.writeInt32LE(sampleRate, 60);
+        headerBuffer.writeInt32LE(avgBps, 64);
+        headerBuffer.writeInt16LE(blockAlign, 68);
+        headerBuffer.writeInt16LE(bitDepth, 70);
+        headerBuffer.write(data, 72);
+        headerBuffer.writeInt32LE(chunks, 76)
+        let finalBuffer = Buffer.concat([headerBuffer, buffer.read(chunks)], chunks + headerSize)
+        return { export: {type: this.type, data: finalBuffer} }
     }
 }
 
