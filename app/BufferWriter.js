@@ -30,7 +30,7 @@ class BufferWriter {
      */
     alloc(bytes) {
         if (this._buffer.length <= this.bytePosition + bytes) {
-            let tBuffer = Buffer.alloc(this._buffer.length + bytes);
+            let tBuffer = Buffer.alloc(Math.max(this._buffer.length * 2, this._buffer.length + bytes));
             this._buffer.copy(tBuffer, 0);
             this._buffer = tBuffer;
         }
@@ -38,8 +38,8 @@ class BufferWriter {
     }
 
     concat(buffer) {
-        this.trim();
-        this._buffer = Buffer.concat([this._buffer, buffer]);
+        this.alloc(buffer.length);
+        buffer.copy(this._buffer, this.bytePosition);
         this.bytePosition += buffer.length;
     }
 
@@ -47,9 +47,9 @@ class BufferWriter {
      * Writes bytes to the buffer
      * @param {Mixed} bytes 
      */
-    write(bytes) {
-        this.alloc(bytes.length).buffer.write(bytes, this.bytePosition);
-        this.bytePosition += bytes.length;
+    write(bytes, length = Buffer.byteLength(bytes)) {
+        this.alloc(length).buffer.write(bytes, this.bytePosition);
+        this.bytePosition += length;
     }
 
     /**
