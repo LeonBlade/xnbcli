@@ -17,8 +17,8 @@ let fail = 0;
 // define the version number
 const VERSION = '1.0.7';
 
-// async wrapper for function
-(async () => {
+// check for updates
+async function checkUpdate() {
 
     try {
         // fetch the package.json to see if there's a new version available
@@ -36,7 +36,9 @@ const VERSION = '1.0.7';
         Log.error('Failed to search for a new update. Application should still function normally.');
         Log.error(error);
     }
-    
+}
+
+(() => {
     // call the init function to get the party started
     init();
 
