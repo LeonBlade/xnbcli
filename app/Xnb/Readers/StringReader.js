@@ -30,14 +30,12 @@ class StringReader extends BaseReader {
     write(buffer, string, resolver) {
         // write the index
         this.writeIndex(buffer, resolver);
-        // create a string buffer for special characters 4 extra bytes per utf8 character
-        const _buff = Buffer.alloc(string.length * 4);
-        // write into the buffer and get the size back out
-        const size = _buff.write(string);
+        // get the size of the string
+        const size = Buffer.byteLength(string);
         // write the length of the string
         buffer.write7BitNumber(size); 
         // write the string
-        buffer.concat(_buff.slice(0, size));
+        buffer.write(string, size);
     }
 
     isValueType() {

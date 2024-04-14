@@ -27,9 +27,7 @@ class CharReader extends BaseReader {
      */
     write(buffer, content, resolver) {
         this.writeIndex(buffer, resolver);
-        const _buf = Buffer.alloc(4);
-        const size = _buf.write(content);
-        buffer.concat(_buf.slice(0, size));
+        buffer.write(content);
     }
 
     /**
