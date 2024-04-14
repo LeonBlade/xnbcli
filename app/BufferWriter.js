@@ -39,16 +39,16 @@ class BufferWriter {
 
     concat(buffer) {
         this.alloc(buffer.length);
-        buffer.copy(this._buffer, this.bytePosition);
+        this._buffer.set(buffer, this.bytePosition);
         this.bytePosition += buffer.length;
     }
 
     /**
      * Writes bytes to the buffer
-     * @param {Mixed} bytes 
+     * @param {Mixed} string 
      */
-    write(bytes, length = Buffer.byteLength(bytes)) {
-        this.alloc(length).buffer.write(bytes, this.bytePosition);
+    write(string, length = Buffer.byteLength(string)) {
+        this.alloc(length).buffer.write(string, this.bytePosition);
         this.bytePosition += length;
     }
 
