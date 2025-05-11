@@ -29,7 +29,7 @@ class BufferWriter {
      * @param {Number} bytes Number of bytes to allocate into the buffer
      */
     alloc(bytes) {
-        if (this._buffer.length <= this.bytePosition + bytes) {
+        if (this._buffer.length < this.bytePosition + bytes) {
             let tBuffer = Buffer.alloc(Math.max(this._buffer.length * 2, this._buffer.length + bytes));
             this._buffer.copy(tBuffer, 0);
             this._buffer = tBuffer;
